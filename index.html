@@ -1,771 +1,667 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+# FinTrack Pro — Single File HTML App
 
-// ─── Storage ─────────────────────────────────────────────────────────────────
-const KEY = "fpt_v3";
-const empty = () => ({ projects: [], expenses: [], payments: [], transactions: [] });
-const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || empty(); } catch { return empty(); } };
-const save = (d) => localStorage.setItem(KEY, JSON.stringify(d));
-const uid = () => Math.random().toString(36).slice(2, 9);
-const toDay = () => new Date().toISOString().slice(0, 10);
+Save the following as `index.html` and open it in a browser.
 
-// ─── Formatting ───────────────────────────────────────────────────────────────
-const money = (n) => "৳ " + Math.round(n || 0).toLocaleString("en-US");
-const fDate = (d) => d ? new Date(d + "T00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FinTrack Pro</title>
 
-// ─── Animated counter hook ────────────────────────────────────────────────────
-function useCounter(target, duration = 900) {
-  const [val, setVal] = useState(0);
-  const prev = useRef(0);
-  useEffect(() => {
-    const start = prev.current;
-    const diff = target - start;
-    if (diff === 0) return;
-    const t0 = performance.now();
-    let raf;
-    const step = (now) => {
-      const p = Math.min((now - t0) / duration, 1);
-      const ease = 1 - Math.pow(1 - p, 3);
-      setVal(Math.round(start + diff * ease));
-      if (p < 1) raf = requestAnimationFrame(step);
-      else prev.current = target;
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
-  return val;
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:Inter,Arial,sans-serif;
+  background:#f4f7fb;
+  color:#111827;
 }
+header{
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.nav{
+  max-width:1400px;
+  margin:auto;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding:14px 20px;
+  overflow-x:auto;
+}
+.logo{
+  font-size:20px;
+  font-weight:700;
+  margin-right:20px;
+}
+.nav button{
+  border:none;
+  background:#f3f4f6;
+  padding:10px 16px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+}
+.nav button.active{
+  background:#111827;
+  color:white;
+}
+.container{
+  max-width:1400px;
+  margin:auto;
+  padding:24px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+}
+.card{
+  background:white;
+  border-radius:16px;
+  padding:20px;
+  border:1px solid #e5e7eb;
+  box-shadow:0 2px 6px rgba(0,0,0,.04);
+}
+.card h3{
+  margin-bottom:10px;
+}
+.stat{
+  font-size:30px;
+  font-weight:700;
+  margin-top:8px;
+}
+.green{color:#16a34a}
+.red{color:#dc2626}
+.orange{color:#ea580c}
+.blue{color:#2563eb}
+.purple{color:#7c3aed}
+.section{
+  display:none;
+}
+.section.active{
+  display:block;
+}
+.table-wrap{
+  overflow:auto;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:16px;
+  background:white;
+  border-radius:16px;
+  overflow:hidden;
+}
+th,td{
+  padding:14px;
+  border-bottom:1px solid #f1f5f9;
+  text-align:left;
+  white-space:nowrap;
+}
+th{
+  background:#f8fafc;
+  font-size:12px;
+  text-transform:uppercase;
+  color:#64748b;
+}
+input,select,textarea{
+  width:100%;
+  padding:10px;
+  border:1px solid #d1d5db;
+  border-radius:10px;
+  margin-top:6px;
+}
+label{
+  font-size:12px;
+  color:#6b7280;
+  font-weight:600;
+  text-transform:uppercase;
+}
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+  margin-top:20px;
+}
+.btn{
+  background:#111827;
+  color:white;
+  border:none;
+  padding:12px 18px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+}
+.btn-danger{
+  background:#dc2626;
+}
+.actions{
+  display:flex;
+  gap:8px;
+}
+.timeline-item{
+  border-left:3px solid #2563eb;
+  padding-left:16px;
+  margin-bottom:16px;
+}
+.search{
+  margin:16px 0;
+}
+.badge{
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+}
+.pending{background:#fef3c7;color:#92400e}
+.ongoing{background:#dbeafe;color:#1d4ed8}
+.completed{background:#dcfce7;color:#166534}
+.paid{background:#ede9fe;color:#6d28d9}
+</style>
+</head>
+<body>
 
-// ─── Status config ────────────────────────────────────────────────────────────
-const STATUS = {
-  Pending:   { bg: "#FFF8E6", color: "#92600A", dot: "#F59E0B" },
-  Ongoing:   { bg: "#E8F4FD", color: "#1565A8", dot: "#2E86DE" },
-  Completed: { bg: "#EAF7EF", color: "#1A6E3C", dot: "#22C55E" },
-  Paid:      { bg: "#F3EFFE", color: "#5E2DA8", dot: "#9B59B6" },
-  Yes:       { bg: "#EAF7EF", color: "#1A6E3C", dot: "#22C55E" },
-  No:        { bg: "#FEF0F0", color: "#9B1C1C", dot: "#EF4444" },
+<header>
+<div class="nav">
+<div class="logo">FinTrack Pro</div>
+<button class="active" onclick="showSection('dashboard',this)">Dashboard</button>
+<button onclick="showSection('projects',this)">Projects</button>
+<button onclick="showSection('expenses',this)">Expenses</button>
+<button onclick="showSection('payments',this)">Company Payments</button>
+<button onclick="showSection('partners',this)">Partner Transactions</button>
+<button onclick="showSection('timeline',this)">Timeline</button>
+</div>
+</header>
+
+<div class="container">
+
+<section id="dashboard" class="section active">
+<h2>Dashboard</h2>
+<br>
+<div class="grid">
+<div class="card">
+<h3>Total Earnings</h3>
+<div class="stat green" id="totalIncome">৳0</div>
+</div>
+<div class="card">
+<h3>Total Expenses</h3>
+<div class="stat red" id="totalExpenses">৳0</div>
+</div>
+<div class="card">
+<h3>Net Earnings</h3>
+<div class="stat blue" id="netEarnings">৳0</div>
+</div>
+<div class="card">
+<h3>Pending Reimbursements</h3>
+<div class="stat orange" id="pendingReimb">৳0</div>
+</div>
+<div class="card">
+<h3>Active Projects</h3>
+<div class="stat purple" id="activeProjects">0</div>
+</div>
+</div>
+</section>
+
+<section id="projects" class="section">
+<h2>Projects</h2>
+<div class="card">
+<div class="form-grid">
+<div>
+<label>Project Name</label>
+<input id="projectName">
+</div>
+<div>
+<label>Client</label>
+<input id="projectClient">
+</div>
+<div>
+<label>Status</label>
+<select id="projectStatus">
+<option>Pending</option>
+<option>Ongoing</option>
+<option>Completed</option>
+<option>Paid</option>
+</select>
+</div>
+<div>
+<label>Budget</label>
+<input type="number" id="projectBudget">
+</div>
+<div>
+<label>Expected Payment</label>
+<input type="number" id="projectExpected">
+</div>
+<div>
+<label>Final Payment</label>
+<input type="number" id="projectFinal">
+</div>
+</div>
+<br>
+<button class="btn" onclick="addProject()">Add Project</button>
+</div>
+<div class="search">
+<input id="projectSearch" placeholder="Search projects..." onkeyup="renderProjects()">
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Client</th>
+<th>Status</th>
+<th>Budget</th>
+<th>Expected</th>
+<th>Final</th>
+<th>Profit/Loss</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="projectTable"></tbody>
+</table>
+</div>
+</section>
+
+<section id="expenses" class="section">
+<h2>Expenses</h2>
+<div class="card">
+<div class="form-grid">
+<div>
+<label>Date</label>
+<input type="date" id="expenseDate">
+</div>
+<div>
+<label>Project</label>
+<input id="expenseProject">
+</div>
+<div>
+<label>Type</label>
+<select id="expenseType">
+<option>Transport</option>
+<option>Food</option>
+<option>Equipment</option>
+<option>Materials</option>
+<option>Software</option>
+<option>Internet</option>
+<option>Miscellaneous</option>
+</select>
+</div>
+<div>
+<label>Paid By</label>
+<select id="expensePaidBy">
+<option>Me</option>
+<option>Friend</option>
+<option>Company</option>
+</select>
+</div>
+<div>
+<label>Amount</label>
+<input type="number" id="expenseAmount">
+</div>
+<div>
+<label>Reimbursable</label>
+<select id="expenseReimbursable">
+<option>Yes</option>
+<option>No</option>
+</select>
+</div>
+</div>
+<br>
+<button class="btn" onclick="addExpense()">Add Expense</button>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Project</th>
+<th>Type</th>
+<th>Paid By</th>
+<th>Amount</th>
+<th>Reimbursable</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="expenseTable"></tbody>
+</table>
+</div>
+</section>
+
+<section id="payments" class="section">
+<h2>Company Payments</h2>
+<div class="card">
+<div class="form-grid">
+<div>
+<label>Date</label>
+<input type="date" id="paymentDate">
+</div>
+<div>
+<label>Project</label>
+<input id="paymentProject">
+</div>
+<div>
+<label>Amount</label>
+<input type="number" id="paymentAmount">
+</div>
+<div>
+<label>Method</label>
+<input id="paymentMethod">
+</div>
+<div>
+<label>Covers</label>
+<select id="paymentCovers">
+<option>Salary</option>
+<option>Transport</option>
+<option>Equipment Cost</option>
+<option>Bonus</option>
+<option>Reimbursement</option>
+</select>
+</div>
+</div>
+<br>
+<button class="btn" onclick="addPayment()">Add Payment</button>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Project</th>
+<th>Amount</th>
+<th>Method</th>
+<th>Covers</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="paymentTable"></tbody>
+</table>
+</div>
+</section>
+
+<section id="partners" class="section">
+<h2>Partner Transactions</h2>
+<div class="card">
+<div class="form-grid">
+<div>
+<label>Date</label>
+<input type="date" id="partnerDate">
+</div>
+<div>
+<label>Who Paid</label>
+<select id="partnerPaid">
+<option>Me</option>
+<option>Friend</option>
+</select>
+</div>
+<div>
+<label>Who Owes</label>
+<select id="partnerOwes">
+<option>Friend</option>
+<option>Me</option>
+</select>
+</div>
+<div>
+<label>Amount</label>
+<input type="number" id="partnerAmount">
+</div>
+<div>
+<label>Reason</label>
+<input id="partnerReason">
+</div>
+</div>
+<br>
+<button class="btn" onclick="addPartner()">Add Transaction</button>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Who Paid</th>
+<th>Who Owes</th>
+<th>Amount</th>
+<th>Reason</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="partnerTable"></tbody>
+</table>
+</div>
+</section>
+
+<section id="timeline" class="section">
+<h2>Timeline</h2>
+<br>
+<div id="timelineList"></div>
+</section>
+
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem('fintrack_pro')) || {
+projects:[],
+expenses:[],
+payments:[],
+partners:[]
 };
-const Pill = ({ label }) => {
-  const s = STATUS[label] || { bg: "#F1F5F9", color: "#475569", dot: "#94A3B8" };
-  return (
-    <span style={{ background: s.bg, color: s.color, borderRadius: 20, padding: "2px 10px", fontSize: 12, fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 5 }}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: s.dot, flexShrink: 0 }} />
-      {label}
-    </span>
-  );
+
+function save(){
+localStorage.setItem('fintrack_pro',JSON.stringify(data));
+renderAll();
+}
+
+function money(n){
+return '৳'+Number(n||0).toLocaleString();
+}
+
+function showSection(id,btn){
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');
+}
+
+function addProject(){
+const p={
+id:Date.now(),
+name:projectName.value,
+client:projectClient.value,
+status:projectStatus.value,
+budget:+projectBudget.value,
+expected:+projectExpected.value,
+final:+projectFinal.value
 };
+data.projects.push(p);
+save();
+}
 
-// ─── Global CSS ───────────────────────────────────────────────────────────────
-const G = `
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8F9FB; color: #111827; font-size: 14px; }
-  input, select, textarea, button { font-family: inherit; font-size: 14px; outline: none; }
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 4px; }
-  table { border-collapse: collapse; width: 100%; }
-  th { font-size: 11px; font-weight: 600; color: #9CA3AF; text-transform: uppercase; letter-spacing: .06em; padding: 10px 14px; text-align: left; border-bottom: 1px solid #F1F5F9; white-space: nowrap; }
-  td { padding: 11px 14px; border-bottom: 1px solid #F8F9FB; color: #374151; vertical-align: middle; white-space: nowrap; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #FAFBFC; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-  .fu { animation: fadeUp .25s ease both; }
-`;
-
-// ─── UI Primitives ────────────────────────────────────────────────────────────
-const Card = ({ children, style = {} }) => (
-  <div style={{ background: "#fff", border: "1px solid #E9ECF0", borderRadius: 12, ...style }}>{children}</div>
-);
-
-const Btn = ({ children, onClick, variant = "primary", sm, style = {}, disabled }) => {
-  const v = {
-    primary: { background: "#111827", color: "#fff", border: "1px solid #111827" },
-    ghost:   { background: "transparent", color: "#6B7280", border: "1px solid #E5E7EB" },
-    danger:  { background: "transparent", color: "#DC2626", border: "1px solid #FECACA" },
-    green:   { background: "transparent", color: "#16A34A", border: "1px solid #BBF7D0" },
-  };
-  return (
-    <button onClick={onClick} disabled={disabled}
-      style={{ ...v[variant], borderRadius: 8, padding: sm ? "5px 12px" : "8px 16px", fontSize: sm ? 12 : 13, fontWeight: 500, cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? .5 : 1, transition: "opacity .15s", ...style }}>
-      {children}
-    </button>
-  );
+function addExpense(){
+const e={
+id:Date.now(),
+date:expenseDate.value,
+project:expenseProject.value,
+type:expenseType.value,
+paidBy:expensePaidBy.value,
+amount:+expenseAmount.value,
+reimbursable:expenseReimbursable.value
 };
+data.expenses.push(e);
+save();
+}
 
-const Field = ({ label, value, onChange, type = "text", options, placeholder, required }) => {
-  const base = { width: "100%", border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 11px", background: "#fff", color: "#111827", marginTop: 4 };
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <label style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: ".05em" }}>
-        {label}{required && <span style={{ color: "#EF4444" }}> *</span>}
-      </label>
-      {options
-        ? <select value={value} onChange={e => onChange(e.target.value)} style={base}><option value="">— select —</option>{options.map(o => <option key={o}>{o}</option>)}</select>
-        : type === "textarea"
-        ? <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{ ...base, resize: "vertical", minHeight: 64 }} />
-        : <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={base} />
-      }
-    </div>
-  );
+function addPayment(){
+const p={
+id:Date.now(),
+date:paymentDate.value,
+project:paymentProject.value,
+amount:+paymentAmount.value,
+method:paymentMethod.value,
+covers:paymentCovers.value
 };
-
-const Modal = ({ title, onClose, children }) => (
-  <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
-    onClick={e => e.target === e.currentTarget && onClose()}>
-    <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 520, maxHeight: "90vh", overflow: "auto", padding: 24, boxShadow: "0 20px 60px rgba(0,0,0,.15)" }} className="fu">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <h3 style={{ fontSize: 16, fontWeight: 600 }}>{title}</h3>
-        <Btn onClick={onClose} variant="ghost" sm>✕</Btn>
-      </div>
-      {children}
-    </div>
-  </div>
-);
-
-// ─── Animated Stat Card ───────────────────────────────────────────────────────
-function StatCard({ label, rawValue, prefix = "৳ ", suffix = "", color = "#111827", icon, sub }) {
-  const animated = useCounter(Math.round(rawValue || 0));
-  return (
-    <Card style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 6 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: ".06em" }}>{label}</span>
-        {icon && <span style={{ fontSize: 18 }}>{icon}</span>}
-      </div>
-      <div style={{ fontSize: 24, fontWeight: 700, color, fontVariantNumeric: "tabular-nums", letterSpacing: "-.5px" }}>
-        {prefix}{animated.toLocaleString("en-US")}{suffix}
-      </div>
-      {sub && <div style={{ fontSize: 12, color: "#9CA3AF" }}>{sub}</div>}
-    </Card>
-  );
+data.payments.push(p);
+save();
 }
 
-const Search = ({ value, onChange }) => (
-  <div style={{ position: "relative", flex: 1, minWidth: 160, maxWidth: 260 }}>
-    <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9CA3AF", fontSize: 14 }}>⌕</span>
-    <input value={value} onChange={e => onChange(e.target.value)} placeholder="Search…"
-      style={{ width: "100%", border: "1px solid #E5E7EB", borderRadius: 8, padding: "7px 10px 7px 30px", background: "#fff", color: "#111827" }} />
-  </div>
-);
-
-const FilterSelect = ({ value, onChange, options, all = "All" }) => (
-  <select value={value} onChange={e => onChange(e.target.value)}
-    style={{ border: "1px solid #E5E7EB", borderRadius: 8, padding: "7px 10px", background: "#fff", color: "#374151", cursor: "pointer" }}>
-    <option value="">{all}</option>
-    {options.map(o => <option key={o}>{o}</option>)}
-  </select>
-);
-
-const SectionHeader = ({ title, action }) => (
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
-    <h2 style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>{title}</h2>
-    {action}
-  </div>
-);
-
-// ─── DASHBOARD ────────────────────────────────────────────────────────────────
-function Dashboard({ data }) {
-  const { projects, expenses, payments, transactions } = data;
-
-  const totalIncome  = payments.reduce((s, p) => s + +(p.amount || 0), 0);
-  const totalExp     = expenses.reduce((s, e) => s + +(e.amount || 0), 0);
-  const myExp        = expenses.filter(e => e.paidBy === "Me").reduce((s, e) => s + +(e.amount || 0), 0);
-  const pendingReimb = expenses.filter(e => e.reimbursable === "Yes" && e.reimbursed === "No").reduce((s, e) => s + +(e.amount || 0), 0);
-  const active       = projects.filter(p => p.status === "Ongoing").length;
-
-  const friendOwes = transactions.filter(t => t.settled === "No" && t.whoOwes === "Friend").reduce((s, t) => s + +(t.amount || 0), 0);
-  const iOwe       = transactions.filter(t => t.settled === "No" && t.whoOwes === "Me").reduce((s, t) => s + +(t.amount || 0), 0);
-
-  const now = new Date();
-  const months = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
-    return { label: d.toLocaleString("en", { month: "short" }), y: d.getFullYear(), m: d.getMonth() };
-  });
-  const mInc = months.map(m => payments.filter(p => { const d = new Date(p.date); return d.getFullYear() === m.y && d.getMonth() === m.m; }).reduce((s, p) => s + +(p.amount || 0), 0));
-  const mExp = months.map(m => expenses.filter(e => { const d = new Date(e.date); return d.getFullYear() === m.y && d.getMonth() === m.m; }).reduce((s, e) => s + +(e.amount || 0), 0));
-  const maxBar = Math.max(...mInc, ...mExp, 1);
-
-  return (
-    <div className="fu">
-      <SectionHeader title="Dashboard" />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
-        <StatCard label="Total Income"    rawValue={totalIncome}            color="#16A34A" />
-        <StatCard label="Total Expenses"  rawValue={totalExp}               color="#DC2626" />
-        <StatCard label="Net Earnings"    rawValue={totalIncome - totalExp} color={totalIncome >= totalExp ? "#16A34A" : "#DC2626"} />
-        <StatCard label="Pending Reimb."  rawValue={pendingReimb}           color="#D97706" />
-        <StatCard label="Active Projects" rawValue={active}                 color="#2563EB" prefix="" suffix=" active" />
-        <StatCard label="My Expenses"     rawValue={myExp}                  color="#7C3AED" />
-      </div>
-
-      <Card style={{ padding: 20, marginBottom: 16 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: "#9CA3AF", marginBottom: 14, textTransform: "uppercase", letterSpacing: ".06em" }}>Partner Balance</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 12 }}>
-          {[
-            { label: "Friend owes me", val: friendOwes, color: "#16A34A" },
-            { label: "I owe friend",   val: iOwe,       color: "#DC2626" },
-            { label: "Net I receive",  val: friendOwes - iOwe, color: friendOwes >= iOwe ? "#16A34A" : "#DC2626" },
-          ].map(({ label, val, color }) => (
-            <div key={label} style={{ background: "#F8F9FB", borderRadius: 10, padding: "14px 16px" }}>
-              <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4, fontWeight: 600, textTransform: "uppercase" }}>{label}</div>
-              <AnimMoney value={val} color={color} />
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      <Card style={{ padding: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: "#9CA3AF", marginBottom: 16, textTransform: "uppercase", letterSpacing: ".06em" }}>Monthly Overview</div>
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 10, height: 120 }}>
-          {months.map((m, i) => (
-            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-              <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 90 }}>
-                <div style={{ width: 14, height: Math.max(3, (mInc[i] / maxBar) * 90), background: "#BBF7D0", borderRadius: "3px 3px 0 0", transition: "height .6s ease" }} title={money(mInc[i])} />
-                <div style={{ width: 14, height: Math.max(3, (mExp[i] / maxBar) * 90), background: "#FECACA", borderRadius: "3px 3px 0 0", transition: "height .6s ease" }} title={money(mExp[i])} />
-              </div>
-              <span style={{ fontSize: 11, color: "#9CA3AF" }}>{m.label}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
-          <span style={{ fontSize: 11, color: "#16A34A", display: "flex", alignItems: "center", gap: 5 }}><span style={{ display: "inline-block", width: 10, height: 10, background: "#BBF7D0", borderRadius: 2 }} />Income</span>
-          <span style={{ fontSize: 11, color: "#DC2626", display: "flex", alignItems: "center", gap: 5 }}><span style={{ display: "inline-block", width: 10, height: 10, background: "#FECACA", borderRadius: 2 }} />Expenses</span>
-        </div>
-      </Card>
-    </div>
-  );
+function addPartner(){
+const p={
+id:Date.now(),
+date:partnerDate.value,
+paid:partnerPaid.value,
+owes:partnerOwes.value,
+amount:+partnerAmount.value,
+reason:partnerReason.value
+};
+data.partners.push(p);
+save();
 }
 
-function AnimMoney({ value, color }) {
-  const n = useCounter(Math.round(value || 0));
-  return <div style={{ fontSize: 20, fontWeight: 700, color, fontVariantNumeric: "tabular-nums" }}>৳ {n.toLocaleString("en-US")}</div>;
+function removeItem(type,id){
+data[type]=data[type].filter(x=>x.id!==id);
+save();
 }
 
-// ─── PROJECTS ─────────────────────────────────────────────────────────────────
-const blankProject = () => ({ id: uid(), name: "", client: "", startDate: toDay(), endDate: "", status: "Pending", budget: "", expectedPayment: "", finalPayment: "", notes: "" });
-
-function Projects({ data, setData }) {
-  const [modal, setModal] = useState(null);
-  const [search, setSearch] = useState("");
-  const [fStat, setFStat] = useState("");
-
-  const save = item => {
-    setData(d => {
-      const arr = modal.mode === "add" ? [...d.projects, item] : d.projects.map(p => p.id === item.id ? item : p);
-      return { ...d, projects: arr };
-    });
-    setModal(null);
-  };
-  const del = id => { if (confirm("Delete project?")) setData(d => ({ ...d, projects: d.projects.filter(p => p.id !== id) })); };
-
-  const rows = data.projects
-    .filter(p => !search || (p.name + p.client).toLowerCase().includes(search.toLowerCase()))
-    .filter(p => !fStat || p.status === fStat);
-
-  const totals = { budget: rows.reduce((s, p) => s + +(p.budget || 0), 0), received: rows.reduce((s, p) => s + +(p.finalPayment || 0), 0) };
-
-  return (
-    <div className="fu">
-      <SectionHeader title="Projects" action={<Btn onClick={() => setModal({ mode: "add", item: blankProject() })}>+ New project</Btn>} />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 16 }}>
-        <StatCard label="Total Budget"   rawValue={totals.budget}   color="#2563EB" />
-        <StatCard label="Total Received" rawValue={totals.received} color="#16A34A" />
-        <StatCard label="Projects"       rawValue={rows.length}     prefix="" suffix=" total" color="#7C3AED" />
-      </div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-        <Search value={search} onChange={setSearch} />
-        <FilterSelect value={fStat} onChange={setFStat} options={["Pending", "Ongoing", "Completed", "Paid"]} all="All status" />
-      </div>
-      <Card>
-        <div style={{ overflowX: "auto" }}>
-          <table>
-            <thead><tr><th>Project</th><th>Client</th><th>Start</th><th>End</th><th>Status</th><th>Budget</th><th>Expected</th><th>Received</th><th>P / L</th><th></th></tr></thead>
-            <tbody>
-              {rows.length === 0 && <tr><td colSpan={10} style={{ textAlign: "center", color: "#9CA3AF", padding: 40 }}>No projects yet — add one above.</td></tr>}
-              {rows.map(p => {
-                const pl = +(p.finalPayment || 0) - +(p.budget || 0);
-                return (
-                  <tr key={p.id}>
-                    <td style={{ fontWeight: 600 }}>{p.name || "—"}</td>
-                    <td style={{ color: "#6B7280" }}>{p.client || "—"}</td>
-                    <td style={{ color: "#6B7280" }}>{fDate(p.startDate)}</td>
-                    <td style={{ color: "#6B7280" }}>{fDate(p.endDate)}</td>
-                    <td><Pill label={p.status} /></td>
-                    <td style={{ fontVariantNumeric: "tabular-nums" }}>{money(p.budget)}</td>
-                    <td style={{ fontVariantNumeric: "tabular-nums", color: "#6B7280" }}>{money(p.expectedPayment)}</td>
-                    <td style={{ fontVariantNumeric: "tabular-nums" }}>{money(p.finalPayment)}</td>
-                    <td style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600, color: pl >= 0 ? "#16A34A" : "#DC2626" }}>{pl >= 0 ? "+" : ""}{money(pl)}</td>
-                    <td>
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <Btn sm variant="ghost" onClick={() => setModal({ mode: "edit", item: { ...p } })}>Edit</Btn>
-                        <Btn sm variant="danger" onClick={() => del(p.id)}>Del</Btn>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-      {modal && <Modal title={modal.mode === "add" ? "New project" : "Edit project"} onClose={() => setModal(null)}><ProjectForm item={modal.item} onSave={save} onClose={() => setModal(null)} /></Modal>}
-    </div>
-  );
+function renderProjects(){
+const search = projectSearch.value?.toLowerCase() || '';
+projectTable.innerHTML='';
+data.projects
+.filter(p=>p.name.toLowerCase().includes(search))
+.forEach(p=>{
+const profit=p.final-p.budget;
+projectTable.innerHTML+=`
+<tr>
+<td>${p.name}</td>
+<td>${p.client}</td>
+<td><span class="badge ${p.status.toLowerCase()}">${p.status}</span></td>
+<td>${money(p.budget)}</td>
+<td>${money(p.expected)}</td>
+<td>${money(p.final)}</td>
+<td class="${profit>=0?'green':'red'}">${money(profit)}</td>
+<td><button class="btn btn-danger" onclick="removeItem('projects',${p.id})">Delete</button></td>
+</tr>`;
+});
 }
 
-function ProjectForm({ item, onSave, onClose }) {
-  const [f, setF] = useState(item);
-  const s = k => v => setF(x => ({ ...x, [k]: v }));
-  return (
-    <>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px" }}>
-        <div style={{ gridColumn: "1/-1" }}><Field label="Project name" value={f.name} onChange={s("name")} required /></div>
-        <Field label="Client" value={f.client} onChange={s("client")} />
-        <Field label="Status" value={f.status} onChange={s("status")} options={["Pending", "Ongoing", "Completed", "Paid"]} />
-        <Field label="Start date" value={f.startDate} onChange={s("startDate")} type="date" />
-        <Field label="End date" value={f.endDate} onChange={s("endDate")} type="date" />
-        <Field label="Budget (৳)" value={f.budget} onChange={s("budget")} type="number" />
-        <Field label="Expected payment (৳)" value={f.expectedPayment} onChange={s("expectedPayment")} type="number" />
-        <div style={{ gridColumn: "1/-1" }}><Field label="Final payment received (৳)" value={f.finalPayment} onChange={s("finalPayment")} type="number" /></div>
-      </div>
-      <Field label="Notes" value={f.notes} onChange={s("notes")} type="textarea" />
-      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
-        <Btn onClick={() => onSave(f)} disabled={!f.name}>Save</Btn>
-      </div>
-    </>
-  );
+function renderExpenses(){
+expenseTable.innerHTML='';
+data.expenses.forEach(e=>{
+expenseTable.innerHTML+=`
+<tr>
+<td>${e.date}</td>
+<td>${e.project}</td>
+<td>${e.type}</td>
+<td>${e.paidBy}</td>
+<td>${money(e.amount)}</td>
+<td>${e.reimbursable}</td>
+<td><button class="btn btn-danger" onclick="removeItem('expenses',${e.id})">Delete</button></td>
+</tr>`;
+});
 }
 
-// ─── EXPENSES ─────────────────────────────────────────────────────────────────
-const EXP_TYPES = ["Transport", "Food", "Equipment", "Materials", "Software", "Internet", "Miscellaneous"];
-const blankExp = () => ({ id: uid(), date: toDay(), project: "", type: "", paidBy: "Me", amount: "", reimbursable: "Yes", reimbursed: "No", receiptLink: "", notes: "" });
-
-function Expenses({ data, setData }) {
-  const [modal, setModal] = useState(null);
-  const [search, setSearch] = useState("");
-  const [fProject, setFProject] = useState("");
-  const [fPaid, setFPaid] = useState("");
-
-  const save = item => {
-    setData(d => {
-      const arr = modal.mode === "add" ? [...d.expenses, item] : d.expenses.map(e => e.id === item.id ? item : e);
-      return { ...d, expenses: arr };
-    });
-    setModal(null);
-  };
-  const del = id => { if (confirm("Delete expense?")) setData(d => ({ ...d, expenses: d.expenses.filter(e => e.id !== id) })); };
-
-  const rows = [...data.expenses]
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .filter(e => !search || (e.project + e.type + e.notes).toLowerCase().includes(search.toLowerCase()))
-    .filter(e => !fProject || e.project === fProject)
-    .filter(e => !fPaid || e.paidBy === fPaid);
-
-  const total   = rows.reduce((s, e) => s + +(e.amount || 0), 0);
-  const pending = rows.filter(e => e.reimbursable === "Yes" && e.reimbursed === "No").reduce((s, e) => s + +(e.amount || 0), 0);
-  const pNames  = [...new Set(data.projects.map(p => p.name))];
-
-  return (
-    <div className="fu">
-      <SectionHeader title="Expenses" action={<Btn onClick={() => setModal({ mode: "add", item: blankExp() })}>+ Add expense</Btn>} />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 16 }}>
-        <StatCard label="Total shown"    rawValue={total}   color="#DC2626" />
-        <StatCard label="Pending reimb." rawValue={pending} color="#D97706" />
-      </div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-        <Search value={search} onChange={setSearch} />
-        <FilterSelect value={fProject} onChange={setFProject} options={pNames} all="All projects" />
-        <FilterSelect value={fPaid} onChange={setFPaid} options={["Me", "Friend", "Company"]} all="All payers" />
-      </div>
-      <Card>
-        <div style={{ overflowX: "auto" }}>
-          <table>
-            <thead><tr><th>Date</th><th>Project</th><th>Type</th><th>Paid by</th><th>Amount</th><th>Reimbursable</th><th>Reimbursed</th><th>Notes</th><th></th></tr></thead>
-            <tbody>
-              {rows.length === 0 && <tr><td colSpan={9} style={{ textAlign: "center", color: "#9CA3AF", padding: 40 }}>No expenses yet.</td></tr>}
-              {rows.map(e => (
-                <tr key={e.id}>
-                  <td style={{ color: "#6B7280" }}>{fDate(e.date)}</td>
-                  <td>{e.project || "—"}</td>
-                  <td><Pill label={e.type || "—"} /></td>
-                  <td style={{ fontWeight: 500 }}>{e.paidBy}</td>
-                  <td style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{money(e.amount)}</td>
-                  <td><Pill label={e.reimbursable || "No"} /></td>
-                  <td><Pill label={e.reimbursed || "No"} /></td>
-                  <td style={{ color: "#9CA3AF", maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis" }}>{e.notes}</td>
-                  <td>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <Btn sm variant="ghost" onClick={() => setModal({ mode: "edit", item: { ...e } })}>Edit</Btn>
-                      <Btn sm variant="danger" onClick={() => del(e.id)}>Del</Btn>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-      {modal && <Modal title={modal.mode === "add" ? "New expense" : "Edit expense"} onClose={() => setModal(null)}><ExpenseForm item={modal.item} projectNames={pNames} onSave={save} onClose={() => setModal(null)} /></Modal>}
-    </div>
-  );
+function renderPayments(){
+paymentTable.innerHTML='';
+data.payments.forEach(p=>{
+paymentTable.innerHTML+=`
+<tr>
+<td>${p.date}</td>
+<td>${p.project}</td>
+<td>${money(p.amount)}</td>
+<td>${p.method}</td>
+<td>${p.covers}</td>
+<td><button class="btn btn-danger" onclick="removeItem('payments',${p.id})">Delete</button></td>
+</tr>`;
+});
 }
 
-function ExpenseForm({ item, projectNames, onSave, onClose }) {
-  const [f, setF] = useState(item);
-  const s = k => v => setF(x => ({ ...x, [k]: v }));
-  return (
-    <>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px" }}>
-        <Field label="Date" value={f.date} onChange={s("date")} type="date" />
-        <Field label="Project" value={f.project} onChange={s("project")} options={projectNames} />
-        <Field label="Type" value={f.type} onChange={s("type")} options={EXP_TYPES} />
-        <Field label="Paid by" value={f.paidBy} onChange={s("paidBy")} options={["Me", "Friend", "Company"]} />
-        <Field label="Amount (৳)" value={f.amount} onChange={s("amount")} type="number" required />
-        <Field label="Reimbursable?" value={f.reimbursable} onChange={s("reimbursable")} options={["Yes", "No"]} />
-        <Field label="Reimbursed yet?" value={f.reimbursed} onChange={s("reimbursed")} options={["Yes", "No"]} />
-        <Field label="Receipt / link" value={f.receiptLink} onChange={s("receiptLink")} placeholder="https://…" />
-      </div>
-      <Field label="Notes" value={f.notes} onChange={s("notes")} type="textarea" />
-      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
-        <Btn onClick={() => onSave(f)} disabled={!f.amount}>Save</Btn>
-      </div>
-    </>
-  );
+function renderPartners(){
+partnerTable.innerHTML='';
+data.partners.forEach(p=>{
+partnerTable.innerHTML+=`
+<tr>
+<td>${p.date}</td>
+<td>${p.paid}</td>
+<td>${p.owes}</td>
+<td>${money(p.amount)}</td>
+<td>${p.reason}</td>
+<td><button class="btn btn-danger" onclick="removeItem('partners',${p.id})">Delete</button></td>
+</tr>`;
+});
 }
 
-// ─── COMPANY PAYMENTS ─────────────────────────────────────────────────────────
-const PAY_COVERS = ["Salary", "Transport", "Equipment Cost", "Bonus", "Reimbursement", "Other"];
-const blankPay = () => ({ id: uid(), date: toDay(), project: "", amount: "", method: "", covers: "", pendingBalance: "", notes: "" });
+function renderTimeline(){
+const events=[];
 
-function Payments({ data, setData }) {
-  const [modal, setModal] = useState(null);
-  const [search, setSearch] = useState("");
+data.projects.forEach(p=>{
+events.push({
+date:new Date().toISOString().split('T')[0],
+text:`Project created: ${p.name}`
+});
+});
 
-  const save = item => {
-    setData(d => {
-      const arr = modal.mode === "add" ? [...d.payments, item] : d.payments.map(p => p.id === item.id ? item : p);
-      return { ...d, payments: arr };
-    });
-    setModal(null);
-  };
-  const del = id => { if (confirm("Delete payment?")) setData(d => ({ ...d, payments: d.payments.filter(p => p.id !== id) })); };
+data.expenses.forEach(e=>{
+events.push({
+date:e.date,
+text:`Expense: ${e.type} - ${money(e.amount)}`
+});
+});
 
-  const rows = [...data.payments].sort((a, b) => new Date(b.date) - new Date(a.date))
-    .filter(p => !search || (p.project + p.covers + p.notes).toLowerCase().includes(search.toLowerCase()));
+data.payments.forEach(p=>{
+events.push({
+date:p.date,
+text:`Payment received: ${money(p.amount)}`
+});
+});
 
-  const total = rows.reduce((s, p) => s + +(p.amount || 0), 0);
+data.partners.forEach(p=>{
+events.push({
+date:p.date,
+text:`Partner transaction: ${money(p.amount)}`
+});
+});
 
-  return (
-    <div className="fu">
-      <SectionHeader title="Company payments" action={<Btn onClick={() => setModal({ mode: "add", item: blankPay() })}>+ Add payment</Btn>} />
-      <div style={{ marginBottom: 16 }}>
-        <StatCard label="Total received" rawValue={total} color="#16A34A" />
-      </div>
-      <Search value={search} onChange={setSearch} />
-      <Card style={{ marginTop: 12 }}>
-        <div style={{ overflowX: "auto" }}>
-          <table>
-            <thead><tr><th>Date</th><th>Project</th><th>Amount</th><th>Method</th><th>Covers</th><th>Pending bal.</th><th>Notes</th><th></th></tr></thead>
-            <tbody>
-              {rows.length === 0 && <tr><td colSpan={8} style={{ textAlign: "center", color: "#9CA3AF", padding: 40 }}>No payments yet.</td></tr>}
-              {rows.map(p => (
-                <tr key={p.id}>
-                  <td style={{ color: "#6B7280" }}>{fDate(p.date)}</td>
-                  <td>{p.project || "—"}</td>
-                  <td style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600, color: "#16A34A" }}>{money(p.amount)}</td>
-                  <td style={{ color: "#6B7280" }}>{p.method || "—"}</td>
-                  <td><Pill label={p.covers || "—"} /></td>
-                  <td style={{ fontVariantNumeric: "tabular-nums", color: +(p.pendingBalance) > 0 ? "#D97706" : "#9CA3AF" }}>{money(p.pendingBalance)}</td>
-                  <td style={{ color: "#9CA3AF", maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis" }}>{p.notes}</td>
-                  <td>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <Btn sm variant="ghost" onClick={() => setModal({ mode: "edit", item: { ...p } })}>Edit</Btn>
-                      <Btn sm variant="danger" onClick={() => del(p.id)}>Del</Btn>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-      {modal && <Modal title={modal.mode === "add" ? "New payment" : "Edit payment"} onClose={() => setModal(null)}><PaymentForm item={modal.item} projectNames={data.projects.map(p => p.name)} onSave={save} onClose={() => setModal(null)} /></Modal>}
-    </div>
-  );
+events.sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+timelineList.innerHTML='';
+
+events.forEach(e=>{
+timelineList.innerHTML+=`
+<div class="card timeline-item">
+<h3>${e.text}</h3>
+<p>${e.date}</p>
+</div>`;
+});
 }
 
-function PaymentForm({ item, projectNames, onSave, onClose }) {
-  const [f, setF] = useState(item);
-  const s = k => v => setF(x => ({ ...x, [k]: v }));
-  return (
-    <>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px" }}>
-        <Field label="Date" value={f.date} onChange={s("date")} type="date" />
-        <Field label="Project" value={f.project} onChange={s("project")} options={projectNames} />
-        <Field label="Amount (৳)" value={f.amount} onChange={s("amount")} type="number" required />
-        <Field label="Method" value={f.method} onChange={s("method")} placeholder="bKash, Bank, Cash…" />
-        <Field label="Covers" value={f.covers} onChange={s("covers")} options={PAY_COVERS} />
-        <Field label="Pending balance (৳)" value={f.pendingBalance} onChange={s("pendingBalance")} type="number" />
-      </div>
-      <Field label="Notes" value={f.notes} onChange={s("notes")} type="textarea" />
-      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
-        <Btn onClick={() => onSave(f)} disabled={!f.amount}>Save</Btn>
-      </div>
-    </>
-  );
+function renderDashboard(){
+const income=data.payments.reduce((a,b)=>a+b.amount,0);
+const expenses=data.expenses.reduce((a,b)=>a+b.amount,0);
+const pending=data.expenses
+.filter(x=>x.reimbursable==='Yes')
+.reduce((a,b)=>a+b.amount,0);
+const active=data.projects.filter(x=>x.status==='Ongoing').length;
+
+totalIncome.innerText=money(income);
+totalExpenses.innerText=money(expenses);
+netEarnings.innerText=money(income-expenses);
+pendingReimb.innerText=money(pending);
+activeProjects.innerText=active;
 }
 
-// ─── PARTNER TRANSACTIONS ─────────────────────────────────────────────────────
-const blankTx = () => ({ id: uid(), date: toDay(), whoPaid: "Me", whoOwes: "Friend", amount: "", reason: "", project: "", settled: "No", settlementDate: "", notes: "" });
-
-function Transactions({ data, setData }) {
-  const [modal, setModal] = useState(null);
-  const [search, setSearch] = useState("");
-
-  const save = item => {
-    setData(d => {
-      const arr = modal.mode === "add" ? [...d.transactions, item] : d.transactions.map(t => t.id === item.id ? item : t);
-      return { ...d, transactions: arr };
-    });
-    setModal(null);
-  };
-  const del = id => { if (confirm("Delete?")) setData(d => ({ ...d, transactions: d.transactions.filter(t => t.id !== id) })); };
-
-  const rows = [...data.transactions].sort((a, b) => new Date(b.date) - new Date(a.date))
-    .filter(t => !search || (t.reason + t.project).toLowerCase().includes(search.toLowerCase()));
-
-  const unsettled  = rows.filter(t => t.settled === "No");
-  const friendOwes = unsettled.filter(t => t.whoOwes === "Friend").reduce((s, t) => s + +(t.amount || 0), 0);
-  const iOwe       = unsettled.filter(t => t.whoOwes === "Me").reduce((s, t) => s + +(t.amount || 0), 0);
-
-  return (
-    <div className="fu">
-      <SectionHeader title="Partner transactions" action={<Btn onClick={() => setModal({ mode: "add", item: blankTx() })}>+ Add transaction</Btn>} />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 16 }}>
-        <StatCard label="Friend owes me" rawValue={friendOwes}          color="#16A34A" />
-        <StatCard label="I owe friend"   rawValue={iOwe}                color="#DC2626" />
-        <StatCard label="Net I receive"  rawValue={friendOwes - iOwe}   color={friendOwes >= iOwe ? "#16A34A" : "#DC2626"} />
-      </div>
-      <Search value={search} onChange={setSearch} />
-      <Card style={{ marginTop: 12 }}>
-        <div style={{ overflowX: "auto" }}>
-          <table>
-            <thead><tr><th>Date</th><th>Who paid</th><th>Who owes</th><th>Amount</th><th>Reason</th><th>Project</th><th>Settled</th><th>Settlement date</th><th></th></tr></thead>
-            <tbody>
-              {rows.length === 0 && <tr><td colSpan={9} style={{ textAlign: "center", color: "#9CA3AF", padding: 40 }}>No transactions yet.</td></tr>}
-              {rows.map(t => (
-                <tr key={t.id}>
-                  <td style={{ color: "#6B7280" }}>{fDate(t.date)}</td>
-                  <td style={{ fontWeight: 500 }}>{t.whoPaid}</td>
-                  <td style={{ fontWeight: 500 }}>{t.whoOwes}</td>
-                  <td style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{money(t.amount)}</td>
-                  <td>{t.reason || "—"}</td>
-                  <td style={{ color: "#6B7280" }}>{t.project || "—"}</td>
-                  <td><Pill label={t.settled || "No"} /></td>
-                  <td style={{ color: "#6B7280" }}>{fDate(t.settlementDate)}</td>
-                  <td>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <Btn sm variant="ghost" onClick={() => setModal({ mode: "edit", item: { ...t } })}>Edit</Btn>
-                      <Btn sm variant="danger" onClick={() => del(t.id)}>Del</Btn>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-      {modal && <Modal title={modal.mode === "add" ? "New transaction" : "Edit transaction"} onClose={() => setModal(null)}><TxForm item={modal.item} projectNames={data.projects.map(p => p.name)} onSave={save} onClose={() => setModal(null)} /></Modal>}
-    </div>
-  );
+function renderAll(){
+renderProjects();
+renderExpenses();
+renderPayments();
+renderPartners();
+renderTimeline();
+renderDashboard();
 }
 
-function TxForm({ item, projectNames, onSave, onClose }) {
-  const [f, setF] = useState(item);
-  const s = k => v => setF(x => ({ ...x, [k]: v }));
-  return (
-    <>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px" }}>
-        <Field label="Date" value={f.date} onChange={s("date")} type="date" />
-        <Field label="Amount (৳)" value={f.amount} onChange={s("amount")} type="number" required />
-        <Field label="Who paid" value={f.whoPaid} onChange={s("whoPaid")} options={["Me", "Friend"]} />
-        <Field label="Who owes" value={f.whoOwes} onChange={s("whoOwes")} options={["Me", "Friend"]} />
-        <Field label="Reason" value={f.reason} onChange={s("reason")} placeholder="Split cost, advance…" />
-        <Field label="Project" value={f.project} onChange={s("project")} options={projectNames} />
-        <Field label="Settled?" value={f.settled} onChange={s("settled")} options={["No", "Yes"]} />
-        <Field label="Settlement date" value={f.settlementDate} onChange={s("settlementDate")} type="date" />
-      </div>
-      <Field label="Notes" value={f.notes} onChange={s("notes")} type="textarea" />
-      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
-        <Btn onClick={() => onSave(f)} disabled={!f.amount}>Save</Btn>
-      </div>
-    </>
-  );
-}
+renderAll();
+</script>
 
-// ─── TIMELINE ────────────────────────────────────────────────────────────────
-function Timeline({ data }) {
-  const events = useMemo(() => {
-    const list = [];
-    data.projects.forEach(p => {
-      if (p.startDate) list.push({ date: p.startDate, icon: "🚀", label: `Project started: ${p.name}`, sub: p.client, color: "#2563EB" });
-      if (p.endDate && p.status !== "Pending") list.push({ date: p.endDate, icon: "✅", label: `Project completed: ${p.name}`, sub: p.client, color: "#16A34A" });
-    });
-    data.expenses.forEach(e => list.push({ date: e.date, icon: "💸", label: `Expense — ${e.type} — ${money(e.amount)}`, sub: `${e.paidBy} · ${e.project}`, color: "#DC2626" }));
-    data.payments.forEach(p => list.push({ date: p.date, icon: "💰", label: `Payment received — ${money(p.amount)}`, sub: `${p.covers} · ${p.project}`, color: "#16A34A" }));
-    data.transactions.forEach(t => list.push({ date: t.date, icon: "🤝", label: `${t.whoPaid} paid ${money(t.amount)}, ${t.whoOwes} owes`, sub: t.reason, color: "#7C3AED" }));
-    return list.sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [data]);
-
-  return (
-    <div className="fu">
-      <SectionHeader title="Timeline" />
-      {events.length === 0 && <Card style={{ padding: 60, textAlign: "center", color: "#9CA3AF" }}>No activity yet — start adding projects and transactions.</Card>}
-      <div style={{ position: "relative", paddingLeft: 32 }}>
-        <div style={{ position: "absolute", left: 12, top: 8, bottom: 8, width: 1, background: "#E9ECF0" }} />
-        {events.map((ev, i) => (
-          <div key={i} style={{ position: "relative", marginBottom: 12 }}>
-            <div style={{ position: "absolute", left: -24, top: 12, width: 22, height: 22, borderRadius: "50%", background: `${ev.color}18`, border: `1.5px solid ${ev.color}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>{ev.icon}</div>
-            <Card style={{ padding: "12px 16px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, flexWrap: "wrap" }}>
-                <span style={{ fontWeight: 500, fontSize: 13 }}>{ev.label}</span>
-                <span style={{ fontSize: 12, color: "#9CA3AF", flexShrink: 0 }}>{fDate(ev.date)}</span>
-              </div>
-              {ev.sub && <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>{ev.sub}</div>}
-            </Card>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── SUMMARY / EXPORT ────────────────────────────────────────────────────────
-function Summary({ data }) {
-  const { projects, expenses, payments, transactions } = data;
-  const totalIncome = payments.reduce((s, p) => s + +(p.amount || 0), 0);
-  const totalExp    = expenses.reduce((s, e) => s + +(e.amount || 0), 0);
-  const myExp       = expenses.filter(e => e.paidBy === "Me").reduce((s, e) => s + +(e.amount || 0), 0);
-  const friendExp   = expenses.filter(e => e.paidBy === "Friend").reduce((s, e) => s + +(e.amount || 0), 0);
-  const pendReimb   = expenses.filter(e => e.reimbursable === "Yes" && e.reimbursed === "No").reduce((s, e) => s + +(e.amount || 0), 0);
-
-  const csv = (rows, cols, name) => {
-    const body = [cols.join(","), ...rows.map(r => cols.map(c => `"${(r[c] ?? "").toString().replace(/"/g, '""')}"`).join(","))].join("\n");
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([body], { type: "text/csv" }));
-    a.download = name; a.click();
-  };
-
-  return (
-    <div className="fu">
-      <SectionHeader title="Summary & export" />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
-        <StatCard label="Total income"    rawValue={totalIncome}            color="#16A34A" />
-        <StatCard label="Total expenses"  rawValue={totalExp}               color="#DC2626" />
-        <StatCard label="Net earnings"    rawValue={totalIncome - totalExp} color={totalIncome >= totalExp ? "#16A34A" : "#DC2626"} />
-        <StatCard label="My expenses"     rawValue={myExp}                  color="#2563EB" />
-        <StatCard label="Friend expenses" rawValue={friendExp}              color="#7C3AED" />
-        <StatCard label="Pending reimb."  rawValue={pendReimb}              color="#D97706" />
-      </div>
-
-      <Card style={{ marginBottom: 16 }}>
-        <div style={{ padding: "14px 16px", borderBottom: "1px solid #F1F5F9", fontSize: 11, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: ".06em" }}>Project P & L</div>
-        <div style={{ overflowX: "auto" }}>
-          <table>
-            <thead><tr><th>Project</th><th>Client</th><th>Budget</th><th>Expected</th><th>Received</th><th>P / L</th><th>Status</th></tr></thead>
-            <tbody>
-              {projects.length === 0 && <tr><td colSpan={7} style={{ textAlign: "center", color: "#9CA3AF", padding: 30 }}>—</td></tr>}
-              {projects.map(p => {
-                const pl = +(p.finalPayment || 0) - +(p.budget || 0);
-                return (
-                  <tr key={p.id}>
-                    <td style={{ fontWeight: 600 }}>{p.name}</td>
-                    <td style={{ color: "#6B7280" }}>{p.client}</td>
-                    <td style={{ fontVariantNumeric: "tabular-nums" }}>{money(p.budget)}</td>
-                    <td style={{ fontVariantNumeric: "tabular-nums", color: "#6B7280" }}>{money(p.expectedPayment)}</td>
-                    <td style={{ fontVariantNumeric: "tabular-nums" }}>{money(p.finalPayment)}</td>
-                    <td style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600, color: pl >= 0 ? "#16A34A" : "#DC2626" }}>{pl >= 0 ? "+" : ""}{money(pl)}</td>
-                    <td><Pill label={p.status} /></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      <Card style={{ padding: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: "#9CA3AF", marginBottom: 14, textTransform: "uppercase", letterSpacing: ".06em" }}>Export CSV for accounting</div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <Btn variant="green" onClick={() => csv(projects, ["name","client","startDate","endDate","status","budget","expectedPayment","finalPayment","notes"], "projects.csv")}>Projects</Btn>
-          <Btn variant="green" onClick={() => csv(expenses, ["date","project","type","paidBy","amount","reimbursable","reimbursed","receiptLink","notes"], "expenses.csv")}>Expenses</Btn>
-          <Btn variant="green" onClick={() => csv(payments, ["date","project","amount","method","covers","pendingBalance","notes"], "payments.csv")}>Payments</Btn>
-          <Btn variant="green" onClick={() => csv(transactions, ["date","whoPaid","whoOwes","amount","reason","project","settled","settlementDate","notes"], "transactions.csv")}>Transactions</Btn>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-// ─── NAV ─────────────────────────────────────────────────────────────────────
-const TABS = [
-  { id: "dashboard",    label: "Dashboard" },
-  { id: "projects",     label: "Projects" },
-  { id: "expenses",     label: "Expenses" },
-  { id: "payments",     label: "Payments" },
-  { id: "transactions", label: "Partners" },
-  { id: "timeline",     label: "Timeline" },
-  { id: "summary",      label: "Summary" },
-];
-
-// ─── ROOT ────────────────────────────────────────────────────────────────────
-export default function App() {
-  const [data, setDataRaw] = useState(load);
-  const [tab, setTab] = useState("dashboard");
-
-  const setData = updater => {
-    setDataRaw(prev => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      save(next); return next;
-    });
-  };
-
-  const counts = { P: data.projects.length, E: data.expenses.length, $: data.payments.length, T: data.transactions.length };
-  const countColors = { P: "#2563EB", E: "#DC2626", $: "#16A34A", T: "#7C3AED" };
-
-  return (
-    <>
-      <style>{G}</style>
-      <div style={{ minHeight: "100vh", background: "#F8F9FB" }}>
-        <header style={{ background: "#fff", borderBottom: "1px solid #E9ECF0", position: "sticky", top: 0, zIndex: 100 }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", height: 54, gap: 8 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: "#111827", marginRight: 12, flexShrink: 0 }}>FinTrack</div>
-            <nav style={{ display: "flex", gap: 2, flex: 1, overflowX: "auto" }}>
-              {TABS.map(t => (
-                <button key={t.id} onClick={() => setTab(t.id)}
-                  style={{ padding: "6px 12px", borderRadius: 7, border: "none", background: tab === t.id ? "#F1F5F9" : "transparent", color: tab === t.id ? "#111827" : "#6B7280", fontWeight: tab === t.id ? 600 : 400, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", transition: "all .15s" }}>
-                  {t.label}
-                </button>
-              ))}
-            </nav>
-            <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-              {Object.entries(counts).map(([k, v]) => (
-                <span key={k} style={{ fontSize: 11, fontWeight: 600, color: countColors[k], background: countColors[k] + "18", borderRadius: 6, padding: "2px 7px" }}>{k} {v}</span>
-              ))}
-            </div>
-            <Btn variant="danger" sm onClick={() => { if (confirm("Reset ALL data? This cannot be undone.")) { const d = empty(); save(d); setDataRaw(d); } }} style={{ marginLeft: 4, flexShrink: 0 }}>Reset</Btn>
-          </div>
-        </header>
-        <main style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 20px" }}>
-          {tab === "dashboard"    && <Dashboard    data={data} />}
-          {tab === "projects"     && <Projects     data={data} setData={setData} />}
-          {tab === "expenses"     && <Expenses     data={data} setData={setData} />}
-          {tab === "payments"     && <Payments     data={data} setData={setData} />}
-          {tab === "transactions" && <Transactions data={data} setData={setData} />}
-          {tab === "timeline"     && <Timeline     data={data} />}
-          {tab === "summary"      && <Summary      data={data} />}
-        </main>
-      </div>
-    </>
-  );
-}
+</body>
+</html>
+```
