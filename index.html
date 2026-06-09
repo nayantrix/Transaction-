@@ -30,7 +30,7 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);fon
 .logo-sub{font-size:9.5px;color:rgba(255,255,255,.3);font-weight:500;letter-spacing:.04em}
 .sidebar-close{display:none;margin-left:auto;background:none;border:none;color:rgba(255,255,255,.45);cursor:pointer;padding:6px;border-radius:6px;transition:color .15s}
 .sidebar-close:hover{color:rgba(255,255,255,.8)}
-.nav-section{padding:16px 0 4px}
+.nav-section{padding:16px 0 4px; overflow-y:auto; flex:1}
 .nav-group{padding:6px 18px 4px;font-family:'Syne',sans-serif;font-size:9px;font-weight:700;color:rgba(255,255,255,.22);letter-spacing:.12em;text-transform:uppercase}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;margin:1px 10px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:500;color:rgba(255,255,255,.48);transition:all .16s ease;border:none;background:none;width:calc(100% - 20px);text-align:left;font-family:'Manrope',sans-serif}
 .nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.82)}
@@ -81,6 +81,9 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);fon
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--text);box-shadow:0 0 0 3px rgba(24,22,15,.06);background:#fff}
 .field input::placeholder{color:var(--text3)}
 .field textarea{resize:vertical;min-height:60px}
+.input-group{display:flex;align-items:center}
+.input-group input{border-radius:var(--r) 0 0 var(--r); border-right:none;}
+.input-addon{background:var(--surface2);border:1.5px solid var(--border);padding:10px 14px;border-radius:0 var(--r) var(--r) 0;font-family:'DM Mono',monospace;font-weight:600;color:var(--text2);font-size:14px;}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 18px;border-radius:var(--r);border:none;cursor:pointer;font-family:'Manrope',sans-serif;font-size:13.5px;font-weight:600;transition:all .15s ease;white-space:nowrap;-webkit-appearance:none}
 .btn:active{transform:scale(.97)}
 .btn-primary{background:var(--text);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2)}
@@ -111,10 +114,6 @@ tbody tr:hover{background:var(--bg)}
 .m-meta{font-size:11.5px;color:var(--text3);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .m-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
 .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:700;letter-spacing:.02em}
-.badge-pending{background:var(--amber-light);color:var(--amber)}
-.badge-ongoing{background:var(--blue-light);color:var(--blue)}
-.badge-completed{background:var(--accent-light);color:var(--accent)}
-.badge-paid{background:var(--purple-light);color:var(--purple)}
 .badge-neutral{background:var(--surface2);color:var(--text2)}
 .tl-list{display:flex;flex-direction:column}
 .tl-filters{display:flex;gap:6px;flex-shrink:0;margin-left:auto}
@@ -184,7 +183,7 @@ tbody tr:hover{background:var(--bg)}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 ::-webkit-scrollbar-thumb:hover{background:var(--text3)}
-@media(min-width:1280px){:root{--sidebar-w:256px}.content{padding:28px 32px 36px}.stats-grid{grid-template-columns:repeat(5,1fr)}}
+@media(min-width:1280px){:root{--sidebar-w:256px}.content{padding:28px 32px 36px}.stats-grid{grid-template-columns:repeat(5,1fr)} #personal .stats-grid{grid-template-columns:repeat(4,1fr)}}
 @media(min-width:769px) and (max-width:1279px){.stats-grid{grid-template-columns:repeat(auto-fit,minmax(155px,1fr))}}
 @media(min-width:600px) and (max-width:768px){
   :root{--sidebar-w:220px}
@@ -239,6 +238,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><polyline points="12,6 12,12 16,14"/></svg>
       Timeline
     </button>
+    
     <div class="nav-group" style="margin-top:8px">Manage</div>
     <button class="nav-item" onclick="go('projects',this)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
@@ -254,7 +254,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
     </button>
     <button class="nav-item" onclick="go('partners',this)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Partners
+      Partners & Categories
+    </button>
+
+    <div class="nav-group" style="margin-top:8px">Personal</div>
+    <button class="nav-item" onclick="go('personal',this)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      My Log & Bike
     </button>
   </div>
   <div class="sidebar-bottom">
@@ -341,6 +347,102 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
           <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px" onclick="go('timeline')">View all &#8594;</button>
         </div>
         <div id="dashTimeline"></div>
+      </div>
+    </section>
+
+    <section id="personal" class="section">
+      <div class="stats-grid" style="margin-bottom:14px">
+        <div class="stat-card dark">
+          <div class="stat-icon" style="background:rgba(255,255,255,.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="stat-label">My Total Cut</div>
+          <div class="stat-value" id="statMyCut">৳0</div>
+          <div class="stat-sub" id="statMyCutSub">Personal earnings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--purple-light)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="stat-label">Team Total Share</div>
+          <div class="stat-value" style="color:var(--purple)" id="statTeamCut">৳0</div>
+          <div class="stat-sub" id="statTeamCutSub">Allocated to team</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--blue-light)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></div>
+          <div class="stat-label">Total Bike Distance</div>
+          <div class="stat-value" style="color:var(--blue)" id="statTotalKm">0 KM</div>
+          <div class="stat-sub" id="statKmSub">0 logged trips</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--red-light)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M3 22v-8a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v8"/><path d="M11 15h2a2 2 0 0 1 2 2v5"/><path d="M21 22v-3l-2-2v-5l2-2V4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v18"/><line x1="7" y1="10" x2="7" y2="10"/></svg></div>
+          <div class="stat-label">Total Fuel Cost</div>
+          <div class="stat-value negative" id="statFuelCost">৳0</div>
+          <div class="stat-sub" id="statAvgFuel">Avg: 0 ৳/km</div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-header"><span class="card-title">Record My Cut</span></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="field"><label>Source / Project</label><input id="cutSource" placeholder="e.g. Logo Design" autocomplete="off"></div>
+              <div class="field"><label>Total Amount Received (৳)</label><input type="number" id="cutTotalAmt" placeholder="0" oninput="calcCut()"></div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label>My Percentage Share (%)</label>
+                <div class="input-group">
+                  <input type="number" id="cutPercent" placeholder="e.g. 50" min="0" max="100" value="100" oninput="calcCut()">
+                  <div class="input-addon">%</div>
+                </div>
+              </div>
+              <div class="field"><label>Date</label><input type="date" id="cutDate"></div>
+            </div>
+            <div style="background:var(--bg);padding:14px;border-radius:var(--r);margin-bottom:14px;display:flex;justify-content:space-between">
+              <div><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;font-family:'Syne',sans-serif">My Cut</div><div class="mono positive" id="calcMyCut" style="font-size:16px">৳0</div></div>
+              <div style="text-align:right"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;font-family:'Syne',sans-serif">Team Share</div><div class="mono" style="color:var(--purple);font-size:16px" id="calcTeamCut">৳0</div></div>
+            </div>
+            <button class="btn btn-primary btn-fw" onclick="addCut()">Save My Cut</button>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-header"><span class="card-title">Bike Log & Fuel</span></div>
+          <div class="card-body">
+            <div class="form-row" style="grid-template-columns:1fr">
+              <div class="field"><label>Notes / Trip Detail</label><input id="bikeNotes" placeholder="e.g. Commute to Office" autocomplete="off"></div>
+            </div>
+            <div class="form-row">
+              <div class="field"><label>Distance (KM)</label><input type="number" id="bikeKm" placeholder="0" min="0"></div>
+              <div class="field"><label>Fuel Cost (৳)</label><input type="number" id="bikeFuel" placeholder="0" min="0"></div>
+            </div>
+            <div class="form-row" style="margin-bottom:16px">
+              <div class="field"><label>Date</label><input type="date" id="bikeDate"></div>
+            </div>
+            <button class="btn btn-primary btn-fw" onclick="addBikeLog()">Log Trip & Fuel</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-header"><span class="card-title">My Cut History</span></div>
+        <div class="table-wrap desktop-table">
+          <table>
+            <thead><tr><th>Date</th><th>Source</th><th>Total Earned</th><th>My Share (%)</th><th>My Cut</th><th>Team Share</th><th>Actions</th></tr></thead>
+            <tbody id="cutTable"></tbody>
+          </table>
+          <div id="cutTblEmpty"></div>
+        </div>
+        <div class="mobile-list" id="cutMobile"></div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-header"><span class="card-title">Bike Tracking History</span></div>
+        <div class="table-wrap desktop-table">
+          <table>
+            <thead><tr><th>Date</th><th>Trip Details</th><th>Distance (KM)</th><th>Fuel Cost</th><th>Cost / KM</th><th>Actions</th></tr></thead>
+            <tbody id="bikeTable"></tbody>
+          </table>
+          <div id="bikeTblEmpty"></div>
+        </div>
+        <div class="mobile-list" id="bikeMobile"></div>
       </div>
     </section>
 
@@ -548,6 +650,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
 <div class="drawer" id="drawer">
   <div class="drawer-handle"></div>
+  <button class="drawer-item" onclick="go('personal',null,true);toggleDrawer()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    My Log & Bike
+  </button>
   <button class="drawer-item" onclick="go('timeline',null,true);toggleDrawer()">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12,6 12,12 16,14"/></svg>
     Timeline
@@ -562,10 +668,18 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
 <script>
 // --- DATA STORE ---
-let data = JSON.parse(localStorage.getItem('finTrackData')) || {
-  projects: [], expenses: [], payments: [], partners: [],
-  categories: ['Software', 'Travel', 'Marketing', 'Office Supplies', 'Contractor']
+let data = JSON.parse(localStorage.getItem('finTrackData')) || {};
+// Ensure all default arrays exist
+const ensureArrays = () => {
+  data.projects = data.projects || [];
+  data.expenses = data.expenses || [];
+  data.payments = data.payments || [];
+  data.partners = data.partners || [];
+  data.categories = data.categories || ['Software', 'Travel', 'Marketing', 'Office Supplies', 'Contractor'];
+  data.myCuts = data.myCuts || []; // New
+  data.bikeLogs = data.bikeLogs || []; // New
 };
+ensureArrays();
 let tlFilterMode = 'all';
 
 // --- UTILS ---
@@ -590,7 +704,8 @@ function go(id, el = null, isMobile = false) {
   
   const titles = {
     'dashboard': 'Dashboard', 'timeline': 'Activity Timeline', 'projects': 'Projects', 
-    'expenses': 'Expenses', 'payments': 'Company Payments', 'partners': 'Partners & Categories'
+    'expenses': 'Expenses', 'payments': 'Company Payments', 'partners': 'Partners & Categories',
+    'personal': 'Personal & Bike Tracker'
   };
   document.getElementById('pageTitle').textContent = titles[id];
   
@@ -661,7 +776,7 @@ function updateDashboard() {
     dpt.innerHTML = html;
   }
 
-  // Monthly Income Chart
+  // Monthly Chart
   let dmc = document.getElementById('dashIncomeChart');
   let dmv = document.getElementById('dashMonthly');
   if(data.payments.length === 0) {
@@ -681,7 +796,132 @@ function updateDashboard() {
   }
 }
 
-// --- PROJECTS ---
+// --- PERSONAL TRACKER CALCS & RENDER ---
+function calcCut() {
+  const amt = Number(document.getElementById('cutTotalAmt').value) || 0;
+  const pct = Number(document.getElementById('cutPercent').value) || 0;
+  const myCut = (amt * (pct / 100)).toFixed(0);
+  const teamCut = (amt - myCut).toFixed(0);
+  document.getElementById('calcMyCut').textContent = fmtCurBase(myCut);
+  document.getElementById('calcTeamCut').textContent = fmtCurBase(teamCut);
+}
+
+function addCut() {
+  const source = document.getElementById('cutSource').value || 'Unknown Source';
+  const totalAmt = Number(document.getElementById('cutTotalAmt').value);
+  const percent = Number(document.getElementById('cutPercent').value);
+  const date = document.getElementById('cutDate').value || new Date().toISOString().split('T')[0];
+  
+  if(!totalAmt) return alert('Total Amount is required');
+
+  const myCut = Math.round(totalAmt * (percent / 100));
+  const teamCut = totalAmt - myCut;
+
+  data.myCuts.push({ id: genId(), source, totalAmt, percent, myCut, teamCut, date, created: new Date().toISOString() });
+  save();
+  
+  document.getElementById('cutSource').value = '';
+  document.getElementById('cutTotalAmt').value = '';
+  document.getElementById('cutPercent').value = '100';
+  calcCut(); updatePersonalData(); showToast('Personal cut saved!');
+}
+
+function delCut(id) {
+  if(!confirm('Delete this record?')) return;
+  data.myCuts = data.myCuts.filter(c => c.id !== id); save(); updatePersonalData();
+}
+
+function addBikeLog() {
+  const notes = document.getElementById('bikeNotes').value || 'Ride';
+  const km = Number(document.getElementById('bikeKm').value) || 0;
+  const fuel = Number(document.getElementById('bikeFuel').value) || 0;
+  const date = document.getElementById('bikeDate').value || new Date().toISOString().split('T')[0];
+
+  if(km === 0 && fuel === 0) return alert('Please enter KM or Fuel Cost');
+
+  data.bikeLogs.push({ id: genId(), notes, km, fuel, date, created: new Date().toISOString() });
+  save();
+  
+  document.getElementById('bikeNotes').value = '';
+  document.getElementById('bikeKm').value = '';
+  document.getElementById('bikeFuel').value = '';
+  updatePersonalData(); showToast('Bike log saved!');
+}
+
+function delBikeLog(id) {
+  if(!confirm('Delete this bike log?')) return;
+  data.bikeLogs = data.bikeLogs.filter(b => b.id !== id); save(); updatePersonalData();
+}
+
+function updatePersonalData() {
+  // Stats
+  const totMyCut = data.myCuts.reduce((s, c) => s + c.myCut, 0);
+  const totTeamCut = data.myCuts.reduce((s, c) => s + c.teamCut, 0);
+  const totKm = data.bikeLogs.reduce((s, b) => s + b.km, 0);
+  const totFuel = data.bikeLogs.reduce((s, b) => s + b.fuel, 0);
+  const avgFuel = totKm > 0 ? (totFuel / totKm).toFixed(2) : 0;
+
+  document.getElementById('statMyCut').textContent = fmtCurBase(totMyCut);
+  document.getElementById('statMyCutSub').textContent = `${data.myCuts.length} records`;
+  document.getElementById('statTeamCut').textContent = fmtCurBase(totTeamCut);
+  
+  document.getElementById('statTotalKm').textContent = `${totKm} KM`;
+  document.getElementById('statKmSub').textContent = `${data.bikeLogs.length} logged trips`;
+  document.getElementById('statFuelCost').textContent = `-${fmtCurBase(totFuel)}`;
+  document.getElementById('statAvgFuel').textContent = `Avg: ${avgFuel} ৳/km`;
+
+  // Render Cut Table
+  const ctTb = document.getElementById('cutTable');
+  const ctMb = document.getElementById('cutMobile');
+  let cHtml = '', cmHtml = '';
+  const sortedCuts = [...data.myCuts].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  if(sortedCuts.length === 0) {
+    let empty = `<div class="empty"><div class="empty-icon">&#x1F4B0;</div><div class="empty-text">No cuts recorded</div></div>`;
+    document.getElementById('cutTblEmpty').innerHTML = empty; ctTb.innerHTML = ''; ctMb.innerHTML = empty;
+  } else {
+    document.getElementById('cutTblEmpty').innerHTML = '';
+    sortedCuts.forEach(c => {
+      cHtml += `<tr><td style="font-size:12px;color:var(--text2)">${fmtDate(c.date)}</td>
+        <td style="font-weight:600">${c.source}</td><td class="mono">${fmtCurBase(c.totalAmt)}</td>
+        <td><span class="badge badge-neutral">${c.percent}%</span></td>
+        <td class="positive mono">+${fmtCurBase(c.myCut)}</td><td class="mono" style="color:var(--purple)">${fmtCurBase(c.teamCut)}</td>
+        <td><button class="btn btn-danger" onclick="delCut('${c.id}')">Del</button></td></tr>`;
+
+      cmHtml += `<div class="m-item"><div class="m-dot" style="background:var(--accent)"></div>
+        <div class="m-body"><div class="m-title">${c.source}</div><div class="m-meta">${fmtDate(c.date)} &bull; Share: ${c.percent}%</div></div>
+        <div class="m-right"><div class="positive">+${fmtCurBase(c.myCut)}</div><div style="font-size:11px;color:var(--text3)">Total: ${fmtCurBase(c.totalAmt)}</div></div></div>`;
+    });
+    ctTb.innerHTML = cHtml; ctMb.innerHTML = cmHtml;
+  }
+
+  // Render Bike Table
+  const bTb = document.getElementById('bikeTable');
+  const bMb = document.getElementById('bikeMobile');
+  let bHtml = '', bmHtml = '';
+  const sortedBikes = [...data.bikeLogs].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  if(sortedBikes.length === 0) {
+    let empty = `<div class="empty"><div class="empty-icon">&#x1F6F5;</div><div class="empty-text">No bike trips logged</div></div>`;
+    document.getElementById('bikeTblEmpty').innerHTML = empty; bTb.innerHTML = ''; bMb.innerHTML = empty;
+  } else {
+    document.getElementById('bikeTblEmpty').innerHTML = '';
+    sortedBikes.forEach(b => {
+      let cpk = b.km > 0 ? (b.fuel / b.km).toFixed(2) : '0.00';
+      bHtml += `<tr><td style="font-size:12px;color:var(--text2)">${fmtDate(b.date)}</td>
+        <td style="font-weight:600">${b.notes}</td><td class="mono">${b.km} km</td>
+        <td class="negative mono">-${fmtCurBase(b.fuel)}</td><td class="mono" style="color:var(--text3)">${cpk} ৳/km</td>
+        <td><button class="btn btn-danger" onclick="delBikeLog('${b.id}')">Del</button></td></tr>`;
+
+      bmHtml += `<div class="m-item"><div class="m-dot" style="background:var(--blue)"></div>
+        <div class="m-body"><div class="m-title">${b.notes}</div><div class="m-meta">${fmtDate(b.date)} &bull; ${b.km} km</div></div>
+        <div class="m-right"><div class="negative">-${fmtCurBase(b.fuel)}</div><div style="font-size:11px;color:var(--text3)">${cpk} ৳/km</div></div></div>`;
+    });
+    bTb.innerHTML = bHtml; bMb.innerHTML = bmHtml;
+  }
+}
+
+// --- CORE APP ---
 function addProject() {
   const name = document.getElementById('pjName').value;
   if(!name) return alert('Project name required');
@@ -722,19 +962,14 @@ function renderProjects() {
 
   if(filtered.length === 0) {
     let empty = `<div class="empty"><div class="empty-icon">&#x1F4C1;</div><div class="empty-text">No projects found</div></div>`;
-    document.getElementById('pjTblEmpty').innerHTML = empty;
-    tb.innerHTML = ''; mb.innerHTML = empty;
+    document.getElementById('pjTblEmpty').innerHTML = empty; tb.innerHTML = ''; mb.innerHTML = empty;
     return;
   }
   document.getElementById('pjTblEmpty').innerHTML = '';
 
   filtered.forEach(p => {
-    // Calculate Final Price directly from logged expenses
     let pExp = data.expenses.filter(e => e.projectId === p.id).reduce((s, e) => s + Number(e.amount), 0);
-    
-    // Profit/Loss Formula: BUDGET minus FINAL
     let pl = Number(p.budget) - pExp;
-    
     let plCls = pl >= 0 ? 'positive' : 'negative';
     let plFormatted = (pl >= 0 ? '+' : '-') + fmtCurBase(pl);
 
@@ -769,7 +1004,6 @@ function renderProjects() {
   tb.innerHTML = html; mb.innerHTML = mHtml;
 }
 
-// --- EXPENSES ---
 function addExpense() {
   const pId = document.getElementById('exProject').value;
   const amt = document.getElementById('exAmount').value;
@@ -777,32 +1011,25 @@ function addExpense() {
   
   if(!pId || !amt || !typeVal) return alert('Project, Amount, and Category required');
   
-  // Auto-save new category to global list if it doesn't exist
-  if(!data.categories.includes(typeVal)) {
-    data.categories.push(typeVal);
-  }
+  if(!data.categories.includes(typeVal)) { data.categories.push(typeVal); }
   
   const exp = {
     id: genId(), projectId: pId, partnerId: document.getElementById('exPartner').value,
-    type: typeVal, amount: amt,
-    desc: document.getElementById('exDesc').value || 'Uncategorized Expense',
+    type: typeVal, amount: amt, desc: document.getElementById('exDesc').value || 'Uncategorized Expense',
     status: document.getElementById('exStatus').value,
     date: document.getElementById('exDate').value || new Date().toISOString().split('T')[0],
     created: new Date().toISOString()
   };
   data.expenses.push(exp); 
   
-  // Auto-change project status to Ongoing if currently Pending
   let proj = data.projects.find(p => p.id === pId);
-  if(proj && proj.status === 'Pending') {
-    proj.status = 'Ongoing';
-  }
+  if(proj && proj.status === 'Pending') proj.status = 'Ongoing';
 
   save();
   document.getElementById('exAmount').value = '';
   document.getElementById('exDesc').value = '';
   document.getElementById('exType').value = '';
-  updateData(); showToast('Expense logged & Project Final updated!');
+  updateData(); showToast('Expense logged!');
 }
 
 function delExpense(id) {
@@ -825,8 +1052,7 @@ function renderExpenses() {
 
   if(filtered.length === 0) {
     let empty = `<div class="empty"><div class="empty-icon">&#x1F4B8;</div><div class="empty-text">No expenses found</div></div>`;
-    document.getElementById('exTblEmpty').innerHTML = empty;
-    tb.innerHTML = ''; mb.innerHTML = empty;
+    document.getElementById('exTblEmpty').innerHTML = empty; tb.innerHTML = ''; mb.innerHTML = empty;
     return;
   }
   document.getElementById('exTblEmpty').innerHTML = '';
@@ -867,7 +1093,6 @@ function renderExpenses() {
   tb.innerHTML = html; mb.innerHTML = mHtml;
 }
 
-// --- PAYMENTS ---
 function addPayment() {
   const amt = document.getElementById('payAmount').value;
   if(!amt) return alert('Amount required');
@@ -892,14 +1117,11 @@ function renderPayments() {
   const tb = document.getElementById('payTable');
   const mb = document.getElementById('payMobile');
   let html = '', mHtml = '';
-  
   const sorted = [...data.payments].sort((a,b) => new Date(b.date) - new Date(a.date));
 
   if(sorted.length === 0) {
     let empty = `<div class="empty"><div class="empty-icon">&#x1F4B0;</div><div class="empty-text">No payments recorded</div></div>`;
-    document.getElementById('payTblEmpty').innerHTML = empty;
-    tb.innerHTML = ''; mb.innerHTML = empty;
-    return;
+    document.getElementById('payTblEmpty').innerHTML = empty; tb.innerHTML = ''; mb.innerHTML = empty; return;
   }
   document.getElementById('payTblEmpty').innerHTML = '';
 
@@ -907,28 +1129,17 @@ function renderPayments() {
     let proj = data.projects.find(x => x.id === p.projectId);
     let pName = proj ? proj.name : p.projectId;
 
-    html += `<tr>
-      <td style="font-size:12px;color:var(--text2)">${fmtDate(p.date)}</td>
-      <td style="font-weight:600">${pName}</td><td>${p.notes}</td>
-      <td class="positive">+${fmtCurBase(p.amount)}</td>
-      <td><button class="btn btn-danger" onclick="delPayment('${p.id}')">Del</button></td>
-    </tr>`;
+    html += `<tr><td style="font-size:12px;color:var(--text2)">${fmtDate(p.date)}</td>
+      <td style="font-weight:600">${pName}</td><td>${p.notes}</td><td class="positive">+${fmtCurBase(p.amount)}</td>
+      <td><button class="btn btn-danger" onclick="delPayment('${p.id}')">Del</button></td></tr>`;
 
-    mHtml += `<div class="m-item">
-      <div class="m-dot" style="background:var(--accent)"></div>
-      <div class="m-body">
-        <div class="m-title">${pName}</div>
-        <div class="m-meta"><span>${p.notes}</span> &bull; <span>${fmtDate(p.date)}</span></div>
-      </div>
-      <div class="m-right">
-        <div class="positive" style="font-size:14px">+${fmtCurBase(p.amount)}</div>
-      </div>
-    </div>`;
+    mHtml += `<div class="m-item"><div class="m-dot" style="background:var(--accent)"></div>
+      <div class="m-body"><div class="m-title">${pName}</div><div class="m-meta"><span>${p.notes}</span> &bull; <span>${fmtDate(p.date)}</span></div></div>
+      <div class="m-right"><div class="positive" style="font-size:14px">+${fmtCurBase(p.amount)}</div></div></div>`;
   });
   tb.innerHTML = html; mb.innerHTML = mHtml;
 }
 
-// --- PARTNERS & CATEGORIES ---
 function addPartner() {
   const name = document.getElementById('ptName').value;
   if(!name) return alert('Name required');
@@ -960,8 +1171,7 @@ function renderPartners() {
 
   if(data.partners.length === 0) {
     let empty = `<div class="empty"><div class="empty-icon">&#x1F465;</div><div class="empty-text">No partners added</div></div>`;
-    document.getElementById('ptTblEmpty').innerHTML = empty;
-    tb.innerHTML = ''; mb.innerHTML = empty;
+    document.getElementById('ptTblEmpty').innerHTML = empty; tb.innerHTML = ''; mb.innerHTML = empty;
   } else {
     document.getElementById('ptTblEmpty').innerHTML = '';
     data.partners.forEach(p => {
@@ -973,13 +1183,10 @@ function renderPartners() {
   }
 
   let catHtml = '';
-  data.categories.forEach(c => {
-    catHtml += `<div class="type-tag">${c} <button class="del-type" onclick="delCategory('${c}')">&times;</button></div>`;
-  });
+  data.categories.forEach(c => { catHtml += `<div class="type-tag">${c} <button class="del-type" onclick="delCategory('${c}')">&times;</button></div>`; });
   document.getElementById('catTags').innerHTML = catHtml;
 }
 
-// --- DROPDOWNS POPULATION ---
 function populateDropdowns() {
   let projOpts = '';
   data.projects.forEach(p => projOpts += `<option value="${p.id}">${p.name}</option>`);
@@ -990,18 +1197,14 @@ function populateDropdowns() {
   data.partners.forEach(p => ptnOpts += `<option value="${p.id}">${p.name}</option>`);
   document.getElementById('exPartner').innerHTML = ptnOpts;
 
-  // Use datalist for Categories instead of strict select
   let catOpts = '';
   data.categories.forEach(c => catOpts += `<option value="${c}">`);
   document.getElementById('catList').innerHTML = catOpts;
 }
 
-// --- TIMELINE ---
 function filterTimeline(type, btn) {
   document.querySelectorAll('.tl-filter').forEach(b => b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  tlFilterMode = type;
-  renderTimeline();
+  if(btn) btn.classList.add('active'); tlFilterMode = type; renderTimeline();
 }
 
 function renderTimeline() {
@@ -1025,33 +1228,23 @@ function renderTimeline() {
   items.forEach(i => {
     let amtClass = i.type === 'pay' ? 'positive' : 'negative';
     let prefix = i.type === 'pay' ? '+' : '-';
-    html += `<div class="tl-item">
-      <div class="tl-icon ${i.type}">${i.icon}</div>
-      <div class="tl-card">
-        <div class="tl-card-top">
-          <div class="tl-card-title">${i.title}</div>
-          <div class="tl-card-amt ${amtClass}">${prefix}${fmtCurBase(i.amt)}</div>
-        </div>
-        <div class="tl-card-chips"><span class="tl-chip">${i.meta}</span></div>
-        <div class="tl-card-time">${fmtDate(i.date)}</div>
-      </div>
-    </div>`;
+    html += `<div class="tl-item"><div class="tl-icon ${i.type}">${i.icon}</div><div class="tl-card">
+      <div class="tl-card-top"><div class="tl-card-title">${i.title}</div><div class="tl-card-amt ${amtClass}">${prefix}${fmtCurBase(i.amt)}</div></div>
+      <div class="tl-card-chips"><span class="tl-chip">${i.meta}</span></div>
+      <div class="tl-card-time">${fmtDate(i.date)}</div></div></div>`;
   });
 
   if(items.length === 0) html = `<div class="empty"><div class="empty-icon">&#x1F552;</div><div class="empty-text">No recent activity</div></div>`;
   document.getElementById('mainTimeline').innerHTML = html;
 
-  // Mini timeline for dashboard
   if(tlFilterMode === 'all') {
     let dashHtml = '';
     items.slice(0, 4).forEach(i => {
-      let amtClass = i.type === 'pay' ? 'positive' : 'negative';
-      let prefix = i.type === 'pay' ? '+' : '-';
+      let amtClass = i.type === 'pay' ? 'positive' : 'negative'; let prefix = i.type === 'pay' ? '+' : '-';
       dashHtml += `<div style="display:flex;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border)">
         <div class="tl-icon ${i.type}" style="width:28px;height:28px;margin-top:0">${i.icon.replace('width="16"', 'width="14"').replace('height="16"', 'height="14"')}</div>
         <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${i.title}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${fmtDate(i.date)} &bull; ${i.meta}</div></div>
-        <div class="${amtClass}" style="font-size:13px">${prefix}${fmtCurBase(i.amt)}</div>
-      </div>`;
+        <div class="${amtClass}" style="font-size:13px">${prefix}${fmtCurBase(i.amt)}</div></div>`;
     });
     if(items.length === 0) dashHtml = `<div class="empty"><div class="empty-icon">&#x1F552;</div><div class="empty-text">No recent activity</div></div>`;
     document.getElementById('dashTimeline').innerHTML = dashHtml;
@@ -1065,16 +1258,18 @@ function updateData() {
   renderExpenses();
   renderPayments();
   renderPartners();
+  updatePersonalData(); // New
   renderTimeline();
   updateDashboard();
 }
 
 window.onload = () => {
   document.getElementById('topDate').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-  // Set default dates
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('exDate').value = today;
   document.getElementById('payDate').value = today;
+  document.getElementById('cutDate').value = today; // New
+  document.getElementById('bikeDate').value = today; // New
   updateData();
 };
 </script>
