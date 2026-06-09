@@ -68,7 +68,6 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);fon
 .stat-card.dark .stat-sub{color:rgba(255,255,255,.28)}
 .stat-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
 .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-.dash-col{display:flex;flex-direction:column;gap:14px}
 .dash-full{grid-column:1/-1}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow)}
 .card:last-child{margin-bottom:0}
@@ -161,14 +160,12 @@ tbody tr:hover{background:var(--bg)}
 .no-projects-warn svg{flex-shrink:0}
 .inline-link{background:none;border:none;padding:0;color:var(--amber);font-weight:700;font-size:13px;cursor:pointer;text-decoration:underline;font-family:'Manrope',sans-serif}
 .inline-link:hover{color:var(--text)}
-/* EXPENSE TYPE MANAGER */
 .type-tag{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;background:var(--surface2);border:1.5px solid var(--border);font-size:12px;font-weight:600;color:var(--text2);margin:3px}
 .type-tag .del-type{background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;line-height:1;padding:0 0 0 2px;transition:color .12s}
 .type-tag .del-type:hover{color:var(--red)}
 .type-input-row{display:flex;gap:8px;align-items:center;margin-top:10px}
 .type-input-row input{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r);font-family:'Manrope',sans-serif;font-size:13px;outline:none;background:var(--surface);color:var(--text)}
 .type-input-row input:focus{border-color:var(--text)}
-/* EDIT MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:16px}
 .modal-bg.open{display:flex}
 .modal{background:var(--surface);border-radius:18px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
@@ -176,20 +173,17 @@ tbody tr:hover{background:var(--bg)}
 .modal-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
 .modal-body{padding:20px}
 .modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
-/* INLINE STATUS SELECT */
 .status-select-inline{-webkit-appearance:none;appearance:none;border:1.5px solid var(--border);border-radius:20px;padding:3px 24px 3px 10px;font-size:10.5px;font-weight:700;cursor:pointer;background-repeat:no-repeat;background-position:right 8px center;outline:none;transition:border-color .15s;font-family:'Manrope',sans-serif;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%23a09c95' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
 .status-pending{background-color:var(--amber-light);color:var(--amber);border-color:rgba(154,107,26,.25)}
 .status-ongoing{background-color:var(--blue-light);color:var(--blue);border-color:rgba(30,74,122,.25)}
 .status-completed{background-color:var(--accent-light);color:var(--accent);border-color:rgba(31,92,62,.25)}
 .status-paid{background-color:var(--purple-light);color:var(--purple);border-color:rgba(90,58,138,.25)}
-/* PROFIT TREND */
 .trend-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)}
 .trend-row:last-child{border-bottom:none}
 .trend-name{flex:1;font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .trend-bar-bg{flex:2;background:var(--surface2);border-radius:4px;height:7px;overflow:hidden;min-width:40px}
 .trend-bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
 .trend-val{font-family:'DM Mono',monospace;font-size:11.5px;font-weight:600;min-width:70px;text-align:right;flex-shrink:0}
-/* BAR CHART */
 .bar-chart-wrap{display:flex;align-items:flex-end;gap:6px;height:110px;padding:4px 0 0}
 .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
 .bar-fill{border-radius:4px 4px 0 0;width:100%;transition:height .5s ease;min-height:3px}
@@ -332,7 +326,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
         </div>
       </div>
 
-      <!-- Insight widgets -->
       <div class="dash-grid">
         <div class="card" style="margin-bottom:0">
           <div class="card-header"><span class="card-title">&#x1F4B0; Highest Budget Project</span></div>
@@ -343,11 +336,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
           <div class="card-body" id="dashMonthly"><div class="empty"><div class="empty-icon">&#x1F4CA;</div><div class="empty-text">No payment data yet</div></div></div>
         </div>
         <div class="card dash-full" style="margin-bottom:0">
-          <div class="card-header"><span class="card-title">&#x1F4C8; Monthly Income — Last 6 Months</span></div>
+          <div class="card-header"><span class="card-title">&#x1F4C8; Monthly Income &mdash; Last 6 Months</span></div>
           <div class="card-body" id="dashIncomeChart"><div class="empty"><div class="empty-icon">&#x1F4CA;</div><div class="empty-text">No payment data yet</div></div></div>
         </div>
         <div class="card dash-full" style="margin-bottom:0">
-          <div class="card-header"><span class="card-title">&#x1F4C9; Profit Trend by Project</span></div>
+          <div class="card-header"><span class="card-title">&#x1F4C9; Profit / Loss by Project <span style="font-size:11px;font-weight:500;color:var(--text3)">(Budget &minus; Actual Expenses)</span></span></div>
           <div class="card-body" id="dashProfitTrend"><div class="empty"><div class="empty-icon">&#x1F4C1;</div><div class="empty-text">No project data yet</div></div></div>
         </div>
       </div>
@@ -374,7 +367,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
           <div class="form-row">
             <div class="field"><label>Budget (&#2547;)</label><input type="number" id="pjBudget" placeholder="0" inputmode="numeric" min="0"></div>
             <div class="field"><label>Expected (&#2547;)</label><input type="number" id="pjExpected" placeholder="0" inputmode="numeric" min="0"></div>
-            <div class="field"><label>Final Payment (&#2547;)</label><input type="number" id="pjFinal" placeholder="0" inputmode="numeric" min="0"></div>
           </div>
           <button class="btn btn-primary btn-fw" onclick="addProject()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -392,13 +384,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
         </div>
         <div class="table-wrap desktop-table">
           <table>
-            <thead><tr><th>Project</th><th>Client</th><th>Status</th><th>Budget</th><th>Expected</th><th>Final</th><th>Profit / Loss</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Project</th><th>Client</th><th>Status</th><th>Budget</th><th>Expected</th><th>Actual Expenses</th><th>Profit / Loss</th><th>Actions</th></tr></thead>
             <tbody id="pjTable"></tbody>
           </table>
-          <div id="pjTblEmpty" class="empty" style="display:none"><div class="empty-icon">&#x1F4CB;</div><div class="empty-text">No projects yet &#8212; add one above</div></div>
+          <div id="pjTblEmpty" class="empty" style="display:none"><div class="empty-icon">&#x1F4CB;</div><div class="empty-text">No projects yet &mdash; add one above</div></div>
         </div>
         <div class="mobile-list" id="pjMobile"></div>
-        <div id="pjMobEmpty" class="empty" style="display:none"><div class="empty-icon">&#x1F4CB;</div><div class="empty-text">No projects yet &#8212; add one above</div></div>
+        <div id="pjMobEmpty" class="empty" style="display:none"><div class="empty-icon">&#x1F4CB;</div><div class="empty-text">No projects yet &mdash; add one above</div></div>
       </div>
     </section>
 
@@ -407,7 +399,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
       <div class="card">
         <div class="card-header">
           <span class="card-title">Expense Types</span>
-          <span style="font-size:11px;color:var(--text3)">Tap &#xD7; to remove &bull; Add your own below</span>
+          <span style="font-size:11px;color:var(--text3)">Tap &times; to remove &bull; Add your own below</span>
         </div>
         <div class="card-body-sm">
           <div id="typeTagsContainer"></div>
@@ -621,7 +613,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
       </div>
       <div class="form-row">
         <div class="field"><label>Expected (&#2547;)</label><input type="number" id="editExpected" inputmode="numeric" min="0"></div>
-        <div class="field"><label>Final Payment (&#2547;)</label><input type="number" id="editFinal" inputmode="numeric" min="0"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -643,6 +634,15 @@ if(!D.partners){D.partners=[];}
 function save(){localStorage.setItem('ft_v4',JSON.stringify(D));render();}
 function money(n){return '\u09F3'+Number(n||0).toLocaleString('en-IN');}
 function fmtDate(d){if(!d)return '\u2014';try{return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}catch(e){return d;}}
+
+// Sum all expenses logged against a project name
+function projectExpenses(name){
+  return D.expenses.filter(e=>e.project===name).reduce((s,e)=>s+e.amount,0);
+}
+// P/L = Budget minus actual expenses (positive = under budget = savings/profit)
+function projectPL(p){
+  return (p.budget||0) - projectExpenses(p.name);
+}
 
 let toastTimer;
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200);}
@@ -670,14 +670,13 @@ function bnSet(id){
 }
 document.getElementById('topDate').textContent=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
 
-// EXPENSE TYPES
 function renderTypeTags(){
   const c=document.getElementById('typeTagsContainer');
   c.innerHTML=D.expenseTypes.map(t=>`<span class="type-tag">${escH(t)}<button class="del-type" onclick="removeExpenseType(${JSON.stringify(t)})" title="Remove type">&times;</button></span>`).join('');
   const sel=document.getElementById('exType');
   if(sel){const cur=sel.value;sel.innerHTML=D.expenseTypes.map(t=>`<option>${escH(t)}</option>`).join('');if(D.expenseTypes.includes(cur))sel.value=cur;}
 }
-function escH(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function addExpenseType(){
   const inp=document.getElementById('newTypeName'),val=inp.value.trim();
   if(!val){toast('\u26A0\uFE0F Enter a type name');return;}
@@ -690,7 +689,6 @@ function removeExpenseType(type){
   D.expenseTypes=D.expenseTypes.filter(t=>t!==type);save();toast('Type removed');
 }
 
-// EDIT MODAL
 function openEditModal(id){
   const p=D.projects.find(x=>x.id===id);if(!p)return;
   document.getElementById('editId').value=id;
@@ -699,7 +697,6 @@ function openEditModal(id){
   document.getElementById('editStatus').value=p.status;
   document.getElementById('editBudget').value=p.budget||'';
   document.getElementById('editExpected').value=p.expected||'';
-  document.getElementById('editFinal').value=p.final||'';
   document.getElementById('editModal').classList.add('open');
   document.body.style.overflow='hidden';
 }
@@ -713,7 +710,6 @@ function saveEdit(){
   p.status=document.getElementById('editStatus').value;
   p.budget=+document.getElementById('editBudget').value||0;
   p.expected=+document.getElementById('editExpected').value||0;
-  p.final=+document.getElementById('editFinal').value||0;
   closeEditModal();save();toast('\u2713 Project updated');
 }
 document.getElementById('editModal').addEventListener('click',function(e){if(e.target===this)closeEditModal();});
@@ -721,13 +717,12 @@ document.getElementById('editModal').addEventListener('click',function(e){if(e.t
 function changeStatus(id,val){const p=D.projects.find(x=>x.id===id);if(!p)return;p.status=val;save();toast('\u2713 Status \u2192 '+val);}
 function statusClass(s){return 'status-'+s.toLowerCase();}
 
-// ADD FUNCTIONS
 function addProject(){
   const name=document.getElementById('pjName').value.trim();
   if(!name){toast('\u26A0\uFE0F Enter a project name');return;}
   const ts=Date.now();
-  D.projects.push({id:ts,createdAt:ts,name,client:document.getElementById('pjClient').value.trim(),status:document.getElementById('pjStatus').value,budget:+document.getElementById('pjBudget').value||0,expected:+document.getElementById('pjExpected').value||0,final:+document.getElementById('pjFinal').value||0});
-  ['pjName','pjClient','pjBudget','pjExpected','pjFinal'].forEach(i=>document.getElementById(i).value='');
+  D.projects.push({id:ts,createdAt:ts,name,client:document.getElementById('pjClient').value.trim(),status:document.getElementById('pjStatus').value,budget:+document.getElementById('pjBudget').value||0,expected:+document.getElementById('pjExpected').value||0});
+  ['pjName','pjClient','pjBudget','pjExpected'].forEach(i=>document.getElementById(i).value='');
   save();toast('\u2713 Project added');
 }
 function addExpense(){
@@ -769,7 +764,8 @@ function renderProjects(){
   if(!list.length){tE.style.display='block';mE.style.display='block';return;}
   tE.style.display='none';mE.style.display='none';
   list.forEach(p=>{
-    const pr=p.final-p.budget;
+    const actual=projectExpenses(p.name);
+    const pr=projectPL(p);
     const sc=statusClass(p.status);
     tb.innerHTML+=`<tr>
       <td><strong style="font-weight:600">${escH(p.name)}</strong></td>
@@ -784,7 +780,7 @@ function renderProjects(){
       </td>
       <td class="mono">${money(p.budget)}</td>
       <td class="mono">${money(p.expected)}</td>
-      <td class="mono">${money(p.final)}</td>
+      <td class="negative">${money(actual)}</td>
       <td class="${pr>=0?'positive':'negative'}">${pr>=0?'+':''}${money(pr)}</td>
       <td>
         <div style="display:flex;gap:6px;align-items:center">
@@ -810,6 +806,7 @@ function renderProjects(){
           </select>
           <span class="${pr>=0?'positive':'negative'}" style="font-size:11.5px">${pr>=0?'+':''}${money(pr)}</span>
         </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">Expenses: ${money(actual)}</div>
       </div>
       <div class="m-right">
         <button class="btn btn-ghost btn-sm" onclick="openEditModal(${p.id})" style="padding:4px 8px">
@@ -921,7 +918,10 @@ function buildEvents(){
   D.expenses.forEach(e=>ev.push({id:e.id,sortKey:e.createdAt||e.id,date:e.date,type:'exp',title:e.type+' Expense',amount:money(e.amount),amtCls:'negative',chips:[e.project&&{label:e.project,icon:'\uD83D\uDCC1'},{label:'Paid by '+e.paidBy,icon:'\uD83D\uDC64'},{label:e.reimbursable==='Yes'?'Reimbursable':'Non-reimbursable',color:e.reimbursable==='Yes'?'var(--accent-light)':null,textColor:e.reimbursable==='Yes'?'var(--accent)':null}].filter(Boolean)}));
   D.payments.forEach(p=>ev.push({id:p.id,sortKey:p.createdAt||p.id,date:p.date,type:'pay',title:'Payment \u2014 '+p.covers,amount:money(p.amount),amtCls:'positive',chips:[p.project&&{label:p.project,icon:'\uD83D\uDCC1'},p.method&&{label:p.method,icon:'\uD83D\uDCB3'}].filter(Boolean)}));
   D.partners.forEach(p=>ev.push({id:p.id,sortKey:p.createdAt||p.id,date:p.date,type:'part',title:p.reason||'Partner Transaction',amount:money(p.amount),amtCls:'mono',chips:[p.project&&{label:p.project,icon:'\uD83D\uDCC1'},{label:p.paid+' paid',icon:'\uD83D\uDCB8'},{label:p.owes+' owes',icon:'\uD83E\uDD1D'}].filter(Boolean)}));
-  D.projects.forEach(p=>ev.push({id:p.id,sortKey:p.createdAt||p.id,date:'',type:'proj',title:p.name,amount:p.status,amtCls:'badge '+bc(p.status),amtIsBadge:true,chips:[p.client&&{label:p.client,icon:'\uD83C\uDFE2'},p.budget&&{label:'Budget '+money(p.budget),icon:'\uD83D\uDCB0'},p.final&&{label:'Final '+money(p.final),icon:'\u2705'}].filter(Boolean)}));
+  D.projects.forEach(p=>{
+    const actual=projectExpenses(p.name);
+    ev.push({id:p.id,sortKey:p.createdAt||p.id,date:'',type:'proj',title:p.name,amount:p.status,amtCls:'badge '+bc(p.status),amtIsBadge:true,chips:[p.client&&{label:p.client,icon:'\uD83C\uDFE2'},p.budget&&{label:'Budget '+money(p.budget),icon:'\uD83D\uDCB0'},actual&&{label:'Expenses '+money(actual),icon:'\uD83D\uDCB8'}].filter(Boolean)});
+  });
   ev.sort((a,b)=>b.sortKey-a.sortKey);
   return ev;
 }
@@ -966,13 +966,14 @@ function renderTimeline(){
 }
 
 function renderDashboardWidgets(){
-  // 1. Highest budget project
   const topEl=document.getElementById('dashTopProject');
   if(!D.projects.length){
     topEl.innerHTML='<div class="empty"><div class="empty-icon">\uD83D\uDCC1</div><div class="empty-text">No projects yet</div></div>';
   } else {
     const sorted=[...D.projects].sort((a,b)=>(b.budget||0)-(a.budget||0));
-    const top=sorted[0];const pr=(top.final||0)-(top.budget||0);
+    const top=sorted[0];
+    const actual=projectExpenses(top.name);
+    const pl=projectPL(top);
     topEl.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div>
@@ -986,16 +987,19 @@ function renderDashboardWidgets(){
           <div style="font-size:9.5px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Budget</div>
           <div class="mono" style="font-size:16px;font-weight:700">${money(top.budget)}</div>
         </div>
-        <div style="background:${pr>=0?'var(--accent-light)':'var(--red-light)'};border-radius:9px;padding:10px 12px">
-          <div style="font-size:9.5px;color:${pr>=0?'var(--accent)':'var(--red)'};font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Profit / Loss</div>
-          <div class="${pr>=0?'positive':'negative'}" style="font-size:16px">${pr>=0?'+':''}${money(pr)}</div>
+        <div style="background:var(--red-light);border-radius:9px;padding:10px 12px">
+          <div style="font-size:9.5px;color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Actual Expenses</div>
+          <div class="negative" style="font-size:16px">${money(actual)}</div>
+        </div>
+        <div style="background:${pl>=0?'var(--accent-light)':'var(--red-light)'};border-radius:9px;padding:10px 12px;grid-column:1/-1">
+          <div style="font-size:9.5px;color:${pl>=0?'var(--accent)':'var(--red)'};font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Profit / Loss (Budget &minus; Expenses)</div>
+          <div class="${pl>=0?'positive':'negative'}" style="font-size:16px">${pl>=0?'+':''}${money(pl)}</div>
         </div>
       </div>
-      ${sorted.length>1?`<div style="font-size:11px;color:var(--text3);border-top:1px solid var(--border);padding-top:8px;margin-top:2px">${sorted.slice(1,4).map((p,i)=>`<span style="margin-right:8px">${i+2}. ${escH(p.name)} <span style="color:var(--text3)">${money(p.budget)}</span></span>`).join('')}${sorted.length>4?'<span style="color:var(--text3)">+'+( sorted.length-4)+' more</span>':''}</div>`:''}
+      ${sorted.length>1?`<div style="font-size:11px;color:var(--text3);border-top:1px solid var(--border);padding-top:8px;margin-top:2px">${sorted.slice(1,4).map((p,i)=>`<span style="margin-right:8px">${i+2}. ${escH(p.name)} <span style="color:var(--text3)">${money(p.budget)}</span></span>`).join('')}${sorted.length>4?'<span style="color:var(--text3)">+'+(sorted.length-4)+' more</span>':''}</div>`:''}
     </div>`;
   }
 
-  // 2. Avg monthly income
   const mEl=document.getElementById('dashMonthly');
   if(!D.payments.length){
     mEl.innerHTML='<div class="empty"><div class="empty-icon">\uD83D\uDCCA</div><div class="empty-text">No payment data yet</div></div>';
@@ -1023,7 +1027,6 @@ function renderDashboardWidgets(){
     </div>`;
   }
 
-  // 3. Monthly income bar chart
   const chartEl=document.getElementById('dashIncomeChart');
   const now=new Date();
   const m6=[];
@@ -1049,22 +1052,25 @@ function renderDashboardWidgets(){
     </div>`;
   }
 
-  // 4. Profit trend by project
   const trendEl=document.getElementById('dashProfitTrend');
-  const withData=D.projects.filter(p=>p.final>0||p.budget>0);
+  const withData=D.projects.filter(p=>p.budget>0||projectExpenses(p.name)>0);
   if(!withData.length){
     trendEl.innerHTML='<div class="empty"><div class="empty-icon">\uD83D\uDCC1</div><div class="empty-text">No project data yet</div></div>';
   } else {
-    const sorted=[...withData].sort((a,b)=>{const pa=(a.final||0)-(a.budget||0),pb=(b.final||0)-(b.budget||0);return pb-pa;});
-    const maxAbs=Math.max(...sorted.map(p=>Math.abs((p.final||0)-(p.budget||0))),1);
+    const sorted=[...withData].sort((a,b)=>projectPL(b)-projectPL(a));
+    const maxAbs=Math.max(...sorted.map(p=>Math.abs(projectPL(p))),1);
     trendEl.innerHTML=sorted.map(p=>{
-      const pr=(p.final||0)-(p.budget||0);
-      const w=Math.round((Math.abs(pr)/maxAbs)*100);
-      const col=pr>=0?'var(--accent)':'var(--red)';
+      const pl=projectPL(p);
+      const actual=projectExpenses(p.name);
+      const w=Math.round((Math.abs(pl)/maxAbs)*100);
+      const col=pl>=0?'var(--accent)':'var(--red)';
       return `<div class="trend-row">
         <div class="trend-name" title="${escH(p.name)}">${escH(p.name)}</div>
-        <div class="trend-bar-bg"><div class="trend-bar-fill" style="width:${w}%;background:${col}"></div></div>
-        <div class="trend-val ${pr>=0?'positive':'negative'}">${pr>=0?'+':''}${money(pr)}</div>
+        <div style="flex:1;min-width:60px;display:flex;flex-direction:column;gap:2px">
+          <div class="trend-bar-bg"><div class="trend-bar-fill" style="width:${w}%;background:${col}"></div></div>
+          <div style="font-size:9.5px;color:var(--text3)">Expenses: ${money(actual)}</div>
+        </div>
+        <div class="trend-val ${pl>=0?'positive':'negative'}">${pl>=0?'+':''}${money(pl)}</div>
         <span class="badge ${bc(p.status)}" style="margin-left:8px;flex-shrink:0">${p.status}</span>
       </div>`;
     }).join('');
