@@ -356,7 +356,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
           <div class="form-row">
             <div class="field"><label>Budget (&#2547;)</label><input type="number" id="pjBudget" placeholder="0" inputmode="numeric" min="0"></div>
             <div class="field"><label>Expected (&#2547;)</label><input type="number" id="pjExpected" placeholder="0" inputmode="numeric" min="0"></div>
-            </div>
+          </div>
           <button class="btn btn-primary btn-fw" onclick="addProject()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Project
@@ -393,7 +393,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
           <div class="form-row">
             <div class="field"><label>Project</label><select id="exProject"></select></div>
             <div class="field"><label>Partner / Spender</label><select id="exPartner"><option value="">None / Company</option></select></div>
-            <div class="field"><label>Category</label><select id="exType"></select></div>
+            <div class="field">
+              <label>Category / Reason</label>
+              <input type="text" id="exType" list="catList" placeholder="e.g. Software, Travel..." autocomplete="off">
+              <datalist id="catList"></datalist>
+            </div>
           </div>
           <div class="form-row">
             <div class="field"><label>Amount (৳)</label><input type="number" id="exAmount" placeholder="0" inputmode="numeric" min="0"></div>
@@ -725,13 +729,12 @@ function renderProjects() {
   document.getElementById('pjTblEmpty').innerHTML = '';
 
   filtered.forEach(p => {
-    // 1. Calculate Final Price directly from logged expenses
+    // Calculate Final Price directly from logged expenses
     let pExp = data.expenses.filter(e => e.projectId === p.id).reduce((s, e) => s + Number(e.amount), 0);
     
-    // 2. Correct Profit/Loss Formula: BUDGET minus FINAL
+    // Profit/Loss Formula: BUDGET minus FINAL
     let pl = Number(p.budget) - pExp;
     
-    // Formatting: add "+" or "-" sign accurately
     let plCls = pl >= 0 ? 'positive' : 'negative';
     let plFormatted = (pl >= 0 ? '+' : '-') + fmtCurBase(pl);
 
@@ -770,19 +773,35 @@ function renderProjects() {
 function addExpense() {
   const pId = document.getElementById('exProject').value;
   const amt = document.getElementById('exAmount').value;
-  if(!pId || !amt) return alert('Project and Amount required');
+  const typeVal = document.getElementById('exType').value.trim();
+  
+  if(!pId || !amt || !typeVal) return alert('Project, Amount, and Category required');
+  
+  // Auto-save new category to global list if it doesn't exist
+  if(!data.categories.includes(typeVal)) {
+    data.categories.push(typeVal);
+  }
   
   const exp = {
     id: genId(), projectId: pId, partnerId: document.getElementById('exPartner').value,
-    type: document.getElementById('exType').value, amount: amt,
+    type: typeVal, amount: amt,
     desc: document.getElementById('exDesc').value || 'Uncategorized Expense',
     status: document.getElementById('exStatus').value,
     date: document.getElementById('exDate').value || new Date().toISOString().split('T')[0],
     created: new Date().toISOString()
   };
-  data.expenses.push(exp); save();
+  data.expenses.push(exp); 
+  
+  // Auto-change project status to Ongoing if currently Pending
+  let proj = data.projects.find(p => p.id === pId);
+  if(proj && proj.status === 'Pending') {
+    proj.status = 'Ongoing';
+  }
+
+  save();
   document.getElementById('exAmount').value = '';
   document.getElementById('exDesc').value = '';
+  document.getElementById('exType').value = '';
   updateData(); showToast('Expense logged & Project Final updated!');
 }
 
@@ -971,9 +990,10 @@ function populateDropdowns() {
   data.partners.forEach(p => ptnOpts += `<option value="${p.id}">${p.name}</option>`);
   document.getElementById('exPartner').innerHTML = ptnOpts;
 
+  // Use datalist for Categories instead of strict select
   let catOpts = '';
-  data.categories.forEach(c => catOpts += `<option value="${c}">${c}</option>`);
-  document.getElementById('exType').innerHTML = catOpts;
+  data.categories.forEach(c => catOpts += `<option value="${c}">`);
+  document.getElementById('catList').innerHTML = catOpts;
 }
 
 // --- TIMELINE ---
