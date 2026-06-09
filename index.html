@@ -1,10 +1,3 @@
-You are absolutely right, and I apologize for the confusion! Based on your screenshots, the app you are running currently calculates `Final - Budget`, which is why it was giving you backward results (-50k instead of +50k).
-
-I have fixed the formula so that **Profit/Loss = Budget - Final**. Now, if your budget is 1,30,000 and your final expenses are 80,000, it will correctly show **+৳50,000** in green. I also strictly tied the "Final" column to your Expenses section, so anytime you add an expense for a project, it automatically adds up in the project's "Final" column. The manual "Final Payment" input field has been removed completely to prevent any calculation conflicts.
-
-Here is the complete, 100% updated code. Copy and paste this over your entire file:
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1067,5 +1060,3 @@ window.onload = () => {
 </script>
 </body>
 </html>
-
-```
