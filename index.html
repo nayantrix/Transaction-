@@ -1,3 +1,16 @@
+The Royal Enfield Hunter 350 is a beautiful machine! Since you always do a full tank, you are in the perfect position to use the **Tank-to-Tank Method** for tracking. This is the absolute most accurate way to calculate your exact mileage (KM/L).
+
+Instead of just tracking the cost, I have upgraded the bike tracker to automatically calculate how many liters you put in and your exact mileage for that tank.
+
+### What Changed in the Tracker:
+
+* **Current Fuel Rate:** Added a field for the current price of fuel per liter (I set the default to **135 ৳/L** assuming you use Octane in Bangladesh, but you can change it).
+* **Automatic Liters & Mileage:** You just enter the Trip Meter distance and the Total Taka you paid at the pump. The system will automatically calculate how many liters went into your 13L tank and display your exact **KM/L** (which should ideally sit around **30-35 km/l** for the Hunter).
+* **Smarter History:** Your history table now shows Distance, Total Cost, Exact Mileage (KM/L), and Cost per KM.
+
+Here is the fully updated code. Replace your current file with this one:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -260,7 +273,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
     <div class="nav-group" style="margin-top:8px">Personal</div>
     <button class="nav-item" onclick="go('personal',this)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      My Log & Bike
+      My Log & Hunter 350
     </button>
   </div>
   <div class="sidebar-bottom">
@@ -366,15 +379,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
         </div>
         <div class="stat-card">
           <div class="stat-icon" style="background:var(--blue-light)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></div>
-          <div class="stat-label">Total Bike Distance</div>
+          <div class="stat-label">Hunter 350 KM</div>
           <div class="stat-value" style="color:var(--blue)" id="statTotalKm">0 KM</div>
-          <div class="stat-sub" id="statKmSub">0 logged trips</div>
+          <div class="stat-sub" id="statKmSub">0 logged tanks</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon" style="background:var(--red-light)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M3 22v-8a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v8"/><path d="M11 15h2a2 2 0 0 1 2 2v5"/><path d="M21 22v-3l-2-2v-5l2-2V4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v18"/><line x1="7" y1="10" x2="7" y2="10"/></svg></div>
           <div class="stat-label">Total Fuel Cost</div>
           <div class="stat-value negative" id="statFuelCost">৳0</div>
-          <div class="stat-sub" id="statAvgFuel">Avg: 0 ৳/km</div>
+          <div class="stat-sub" id="statAvgFuel">Avg: 0 km/l</div>
         </div>
       </div>
 
@@ -403,20 +416,24 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
             <button class="btn btn-primary btn-fw" onclick="addCut()">Save My Cut</button>
           </div>
         </div>
+        
         <div class="card" style="margin-bottom:0">
-          <div class="card-header"><span class="card-title">Bike Log & Fuel</span></div>
+          <div class="card-header">
+            <span class="card-title">Hunter 350 Tracker (Full Tank)</span>
+          </div>
           <div class="card-body">
-            <div class="form-row" style="grid-template-columns:1fr">
-              <div class="field"><label>Notes / Trip Detail</label><input id="bikeNotes" placeholder="e.g. Commute to Office" autocomplete="off"></div>
-            </div>
             <div class="form-row">
-              <div class="field"><label>Distance (KM)</label><input type="number" id="bikeKm" placeholder="0" min="0"></div>
-              <div class="field"><label>Fuel Cost (৳)</label><input type="number" id="bikeFuel" placeholder="0" min="0"></div>
+              <div class="field"><label>Trip Meter Distance (KM)</label><input type="number" id="bikeKm" placeholder="e.g. 350" min="0"></div>
+              <div class="field"><label>Total Fuel Cost (৳)</label><input type="number" id="bikeFuel" placeholder="0" min="0"></div>
             </div>
             <div class="form-row" style="margin-bottom:16px">
-              <div class="field"><label>Date</label><input type="date" id="bikeDate"></div>
+              <div class="field">
+                <label>Current Fuel Rate (৳/L)</label>
+                <input type="number" id="bikeFuelRate" value="135" min="0">
+              </div>
+              <div class="field"><label>Date Filled</label><input type="date" id="bikeDate"></div>
             </div>
-            <button class="btn btn-primary btn-fw" onclick="addBikeLog()">Log Trip & Fuel</button>
+            <button class="btn btn-primary btn-fw" onclick="addBikeLog()">Log Full Tank</button>
           </div>
         </div>
       </div>
@@ -434,10 +451,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
       </div>
 
       <div class="card" style="margin-top:14px">
-        <div class="card-header"><span class="card-title">Bike Tracking History</span></div>
+        <div class="card-header"><span class="card-title">Fuel & Mileage History</span></div>
         <div class="table-wrap desktop-table">
           <table>
-            <thead><tr><th>Date</th><th>Trip Details</th><th>Distance (KM)</th><th>Fuel Cost</th><th>Cost / KM</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Date</th><th>Distance (KM)</th><th>Total Cost</th><th>Liters Filled</th><th>Mileage (KM/L)</th><th>Cost / KM</th><th>Actions</th></tr></thead>
             <tbody id="bikeTable"></tbody>
           </table>
           <div id="bikeTblEmpty"></div>
@@ -669,15 +686,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <script>
 // --- DATA STORE ---
 let data = JSON.parse(localStorage.getItem('finTrackData')) || {};
-// Ensure all default arrays exist
 const ensureArrays = () => {
   data.projects = data.projects || [];
   data.expenses = data.expenses || [];
   data.payments = data.payments || [];
   data.partners = data.partners || [];
   data.categories = data.categories || ['Software', 'Travel', 'Marketing', 'Office Supplies', 'Contractor'];
-  data.myCuts = data.myCuts || []; // New
-  data.bikeLogs = data.bikeLogs || []; // New
+  data.myCuts = data.myCuts || [];
+  data.bikeLogs = data.bikeLogs || [];
 };
 ensureArrays();
 let tlFilterMode = 'all';
@@ -705,7 +721,7 @@ function go(id, el = null, isMobile = false) {
   const titles = {
     'dashboard': 'Dashboard', 'timeline': 'Activity Timeline', 'projects': 'Projects', 
     'expenses': 'Expenses', 'payments': 'Company Payments', 'partners': 'Partners & Categories',
-    'personal': 'Personal & Bike Tracker'
+    'personal': 'Personal Log & Bike Tracker'
   };
   document.getElementById('pageTitle').textContent = titles[id];
   
@@ -831,25 +847,33 @@ function delCut(id) {
   data.myCuts = data.myCuts.filter(c => c.id !== id); save(); updatePersonalData();
 }
 
+// NEW FULL TANK LOGIC
 function addBikeLog() {
-  const notes = document.getElementById('bikeNotes').value || 'Ride';
   const km = Number(document.getElementById('bikeKm').value) || 0;
-  const fuel = Number(document.getElementById('bikeFuel').value) || 0;
+  const fuelCost = Number(document.getElementById('bikeFuel').value) || 0;
+  const fuelRate = Number(document.getElementById('bikeFuelRate').value) || 135;
   const date = document.getElementById('bikeDate').value || new Date().toISOString().split('T')[0];
 
-  if(km === 0 && fuel === 0) return alert('Please enter KM or Fuel Cost');
+  if(km === 0 || fuelCost === 0) return alert('Please enter both Trip Distance (KM) and Total Fuel Cost');
 
-  data.bikeLogs.push({ id: genId(), notes, km, fuel, date, created: new Date().toISOString() });
+  const litersFilled = Number((fuelCost / fuelRate).toFixed(2));
+  const mileageKpl = Number((km / litersFilled).toFixed(2));
+  
+  data.bikeLogs.push({ 
+    id: genId(), 
+    km, fuel: fuelCost, rate: fuelRate, 
+    liters: litersFilled, kpl: mileageKpl, 
+    date, created: new Date().toISOString() 
+  });
   save();
   
-  document.getElementById('bikeNotes').value = '';
   document.getElementById('bikeKm').value = '';
   document.getElementById('bikeFuel').value = '';
-  updatePersonalData(); showToast('Bike log saved!');
+  updatePersonalData(); showToast('Full tank logged!');
 }
 
 function delBikeLog(id) {
-  if(!confirm('Delete this bike log?')) return;
+  if(!confirm('Delete this fuel log?')) return;
   data.bikeLogs = data.bikeLogs.filter(b => b.id !== id); save(); updatePersonalData();
 }
 
@@ -857,18 +881,20 @@ function updatePersonalData() {
   // Stats
   const totMyCut = data.myCuts.reduce((s, c) => s + c.myCut, 0);
   const totTeamCut = data.myCuts.reduce((s, c) => s + c.teamCut, 0);
+  
   const totKm = data.bikeLogs.reduce((s, b) => s + b.km, 0);
   const totFuel = data.bikeLogs.reduce((s, b) => s + b.fuel, 0);
-  const avgFuel = totKm > 0 ? (totFuel / totKm).toFixed(2) : 0;
+  const totLiters = data.bikeLogs.reduce((s, b) => s + (b.liters || 0), 0);
+  const avgKpl = totLiters > 0 ? (totKm / totLiters).toFixed(1) : 0;
 
   document.getElementById('statMyCut').textContent = fmtCurBase(totMyCut);
   document.getElementById('statMyCutSub').textContent = `${data.myCuts.length} records`;
   document.getElementById('statTeamCut').textContent = fmtCurBase(totTeamCut);
   
   document.getElementById('statTotalKm').textContent = `${totKm} KM`;
-  document.getElementById('statKmSub').textContent = `${data.bikeLogs.length} logged trips`;
+  document.getElementById('statKmSub').textContent = `${data.bikeLogs.length} full tanks`;
   document.getElementById('statFuelCost').textContent = `-${fmtCurBase(totFuel)}`;
-  document.getElementById('statAvgFuel').textContent = `Avg: ${avgFuel} ৳/km`;
+  document.getElementById('statAvgFuel').textContent = `Avg Mileage: ${avgKpl} km/l`;
 
   // Render Cut Table
   const ctTb = document.getElementById('cutTable');
@@ -895,27 +921,33 @@ function updatePersonalData() {
     ctTb.innerHTML = cHtml; ctMb.innerHTML = cmHtml;
   }
 
-  // Render Bike Table
+  // Render Bike Table (Tank-to-Tank)
   const bTb = document.getElementById('bikeTable');
   const bMb = document.getElementById('bikeMobile');
   let bHtml = '', bmHtml = '';
   const sortedBikes = [...data.bikeLogs].sort((a,b) => new Date(b.date) - new Date(a.date));
 
   if(sortedBikes.length === 0) {
-    let empty = `<div class="empty"><div class="empty-icon">&#x1F6F5;</div><div class="empty-text">No bike trips logged</div></div>`;
+    let empty = `<div class="empty"><div class="empty-icon">&#x26FD;</div><div class="empty-text">No full tanks logged yet</div></div>`;
     document.getElementById('bikeTblEmpty').innerHTML = empty; bTb.innerHTML = ''; bMb.innerHTML = empty;
   } else {
     document.getElementById('bikeTblEmpty').innerHTML = '';
     sortedBikes.forEach(b => {
       let cpk = b.km > 0 ? (b.fuel / b.km).toFixed(2) : '0.00';
+      let liters = b.liters ? b.liters : (b.fuel / 135).toFixed(2); // fallback if old data
+      let kpl = b.kpl ? b.kpl : (b.km / liters).toFixed(2); // fallback if old data
+
       bHtml += `<tr><td style="font-size:12px;color:var(--text2)">${fmtDate(b.date)}</td>
-        <td style="font-weight:600">${b.notes}</td><td class="mono">${b.km} km</td>
-        <td class="negative mono">-${fmtCurBase(b.fuel)}</td><td class="mono" style="color:var(--text3)">${cpk} ৳/km</td>
+        <td class="mono" style="font-weight:600">${b.km} KM</td>
+        <td class="negative mono">-${fmtCurBase(b.fuel)}</td>
+        <td class="mono">${liters} L</td>
+        <td class="positive mono" style="font-weight:700">${kpl} km/l</td>
+        <td class="mono" style="color:var(--text3)">${cpk} ৳/km</td>
         <td><button class="btn btn-danger" onclick="delBikeLog('${b.id}')">Del</button></td></tr>`;
 
       bmHtml += `<div class="m-item"><div class="m-dot" style="background:var(--blue)"></div>
-        <div class="m-body"><div class="m-title">${b.notes}</div><div class="m-meta">${fmtDate(b.date)} &bull; ${b.km} km</div></div>
-        <div class="m-right"><div class="negative">-${fmtCurBase(b.fuel)}</div><div style="font-size:11px;color:var(--text3)">${cpk} ৳/km</div></div></div>`;
+        <div class="m-body"><div class="m-title" style="font-family:'DM Mono',monospace">${b.km} KM Driven</div><div class="m-meta">${fmtDate(b.date)} &bull; ${liters} L Filled</div></div>
+        <div class="m-right"><div class="positive" style="font-family:'DM Mono',monospace">${kpl} km/l</div><div style="font-size:11px;color:var(--text3)">${cpk} ৳/km</div></div></div>`;
     });
     bTb.innerHTML = bHtml; bMb.innerHTML = bmHtml;
   }
@@ -1258,7 +1290,7 @@ function updateData() {
   renderExpenses();
   renderPayments();
   renderPartners();
-  updatePersonalData(); // New
+  updatePersonalData();
   renderTimeline();
   updateDashboard();
 }
@@ -1268,10 +1300,12 @@ window.onload = () => {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('exDate').value = today;
   document.getElementById('payDate').value = today;
-  document.getElementById('cutDate').value = today; // New
-  document.getElementById('bikeDate').value = today; // New
+  document.getElementById('cutDate').value = today;
+  document.getElementById('bikeDate').value = today;
   updateData();
 };
 </script>
 </body>
 </html>
+
+```
